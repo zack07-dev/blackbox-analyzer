@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>محلل منتجات Black Box</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--bg:#F6F3EC;--surface:#fff;--ink:#0E1A2E;--muted:#66748B;--line:#E2E8F1;--c1:#D9A21B;--c2:#F7CF62;--tx:#8A5A00;--up:#0B8A5F;--down:#D13B3B;--sh:0 1px 2px rgba(15,27,45,.06),0 8px 24px -12px rgba(15,27,45,.18);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.6 "IBM Plex Sans Arabic",system-ui,sans-serif;min-height:100%}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:14px 14px 40px}
+.hero{background:radial-gradient(circle at 10% 0%,rgba(247,207,98,.45),transparent 45%),radial-gradient(circle at 100% 100%,rgba(217,162,27,.6),transparent 55%),linear-gradient(135deg,#241606,#5C3F0C);color:#fff;border-radius:22px;padding:24px 20px;margin-bottom:16px;box-shadow:0 18px 40px -18px rgba(92,63,12,.6)}
+h1{font-size:25px;margin:0 0 4px;font-weight:700;letter-spacing:-.2px}
+.sub{color:rgba(255,255,255,.85);margin:0;font-size:14px}
+.btn{background:linear-gradient(135deg,var(--c1),var(--c2));color:#2B1D03;border:0;border-radius:999px;padding:11px 22px;font-weight:600;cursor:pointer;min-height:46px;box-shadow:0 10px 22px -10px rgba(180,125,10,.9);transition:transform .15s,box-shadow .15s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 14px 26px -10px rgba(180,125,10,.95)}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:var(--sh)}
+.btn.ok{background:linear-gradient(135deg,#2B2118,#5A4326);color:#F7CF62;box-shadow:0 10px 22px -10px rgba(43,33,24,.8)}
+.btn:focus-visible,select:focus-visible,input:focus-visible,.card:focus-visible{outline:3px solid #D9A21B;outline-offset:2px}
+#drop{background:var(--surface);border:2px dashed #E6C77A;border-radius:22px;padding:48px 20px;text-align:center;box-shadow:var(--sh)}
+#drop.over{border-color:var(--c2);background:#FFF8E5}
+#drop .ic{width:68px;height:68px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#FFF1CC,#FDE7A8);display:flex;align-items:center;justify-content:center;font-size:30px}
+#drop p{margin:6px 0 20px;color:var(--muted)}
+#drop h2{margin:0;font-size:19px}
+#app{display:none}
+.top{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.fname{color:var(--muted);font-size:13px;overflow-wrap:anywhere;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px}
+.stats{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:6px}
+.stat{flex:1 0 158px;background:var(--surface);border-radius:16px;padding:12px 14px;box-shadow:var(--sh);display:flex;gap:10px;align-items:center}
+.stat em{font-style:normal;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+.stat b{display:block;font-size:19px;font-weight:700;line-height:1.3}
+.stat span{color:var(--muted);font-size:12px;line-height:1.3;display:block}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.tools input,.tools select{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-height:48px;width:100%;box-shadow:var(--sh)}
+.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
+.seg{display:inline-flex;background:#EFE9D8;border-radius:999px;padding:4px;gap:2px}
+.seg button{background:transparent;border:0;padding:9px 20px;cursor:pointer;min-height:42px;border-radius:999px;font-weight:600;color:var(--muted);transition:all .2s}
+.seg button[aria-pressed="true"]{background:linear-gradient(135deg,var(--c1),var(--c2));color:#2B1D03;box-shadow:0 6px 14px -6px rgba(180,125,10,.9)}
+.count{color:var(--muted);font-size:14px;font-weight:500}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px}
+.card{background:var(--surface);border:0;border-radius:18px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;text-align:start;padding:0;box-shadow:var(--sh);transition:transform .18s,box-shadow .18s}
+.card:hover{transform:translateY(-4px);box-shadow:0 18px 34px -16px rgba(217,162,27,.5)}
+.ph{background:#fff;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;border-bottom:1px solid var(--line)}
+.ph img{width:100%;height:100%;object-fit:contain}
+.ph i{font-style:normal;color:#6b7684;font-size:12px;padding:8px;text-align:center}
+.bd{position:absolute;top:8px;inset-inline-start:8px;background:rgba(14,26,46,.86);color:#fff;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:999px}
+.cb{padding:12px 13px 13px;display:flex;flex-direction:column;gap:7px;flex:1}
+.br{color:var(--tx);font-size:12px;font-weight:600}
+.ti{font-size:13.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:500;min-height:39px}
+.pr{font-size:19px;font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:#FBF1D6;color:#7A5200}
+.chip.g{background:#E3F6EE;color:#0B7A55}
+.ft{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);margin-top:auto;padding-top:8px;border-top:1px solid var(--line)}
+.ft b{color:#E08A00;font-weight:700}
+.up{color:var(--up)!important}.down{color:var(--down)!important}
+.tw{overflow-x:auto;background:var(--surface);border-radius:18px;max-height:75vh;box-shadow:var(--sh)}
+table{border-collapse:collapse;width:max-content;min-width:100%;font-size:13px}
+th,td{padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:start;max-width:320px;overflow:hidden;text-overflow:ellipsis}
+th{position:sticky;top:0;background:#FBF1D6;z-index:1;font-weight:700;color:#6B4A00}
+tbody tr:nth-child(even){background:#FCFAF4}
+tbody tr{cursor:pointer}tbody tr:hover{background:#FBF1D6}
+td img{width:56px;height:56px;object-fit:contain;background:#fff;border-radius:8px;display:block}
+#modal{position:fixed;inset:0;background:rgba(14,26,46,.55);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:50}
+#modal.on{display:flex}
+.sheet{background:var(--surface);width:100%;max-width:760px;max-height:92%;overflow:auto;border-radius:24px 24px 0 0;padding:18px 18px calc(24px + env(safe-area-inset-bottom,0px))}
+@media(min-width:700px){#modal{align-items:center}.sheet{border-radius:24px;max-height:90%}}
+.sh{display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
+.sh h3{margin:0;font-size:16px;line-height:1.5}
+.sh .btn{padding:8px 16px;min-height:40px}
+.big{background:#fff;border:1px solid var(--line);border-radius:16px;margin:12px 0;height:min(70vw,380px);display:flex;align-items:center;justify-content:center}
+.big img{max-width:100%;max-height:100%;object-fit:contain}
+.big i{font-style:normal;color:#6b7684;padding:10px;text-align:center}
+.g{margin:18px 0 4px;font-weight:700;font-size:14px;color:var(--tx);display:flex;align-items:center;gap:8px}
+.g::before{content:"";width:4px;height:16px;border-radius:2px;background:linear-gradient(var(--c1),var(--c2))}
+.row{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row span{color:var(--muted);flex:0 0 auto}.row b{font-weight:600;text-align:end;overflow-wrap:anywhere}
+.links{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.empty{padding:40px 10px;text-align:center;color:var(--muted)}
+#toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#0E1A2E;color:#fff;padding:10px 20px;border-radius:999px;display:none;z-index:60;font-size:14px;box-shadow:var(--sh)}
+.tr{position:absolute;top:8px;inset-inline-end:8px;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;box-shadow:0 4px 10px -4px rgba(0,0,0,.4)}
+.tw .tr{position:static;display:inline-block}
+.t-d{background:linear-gradient(135deg,#A5F3FC,#C4B5FD);color:#0B2A4A}.t-g{background:linear-gradient(135deg,#FCD34D,#E0A100);color:#3A2600}
+.t-s{background:linear-gradient(135deg,#F1F3F6,#AEB6C2);color:#2D3440}.t-c{background:linear-gradient(135deg,#F0B184,#B8672E);color:#2E1304}
+.tb{border-radius:16px;padding:12px 16px;font-weight:700;font-size:17px;margin:4px 0 10px;display:flex;justify-content:space-between}
+.bk{display:grid;grid-template-columns:125px 1fr 46px;gap:10px;align-items:center;font-size:13px;padding:4px 0}
+.bar2{height:8px;border-radius:99px;background:#EFE9D8;overflow:hidden}.bar2 i{display:block;height:100%;background:linear-gradient(90deg,#D9A21B,#F7CF62)}
+.bk b{text-align:end;font-weight:600}.note{color:var(--muted);font-size:12px;margin-top:6px}
+.nav{display:flex;justify-content:center;margin-bottom:14px}.nav .seg{flex-wrap:wrap;justify-content:center}
+.cnt{background:#2B1D03;color:#F7CF62;border-radius:99px;padding:0 9px;font-size:12px;margin-inline-start:6px}
+.wb{position:absolute;bottom:8px;inset-inline-end:8px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.95);color:#B9B3A3;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px -4px rgba(0,0,0,.4);cursor:pointer;transition:transform .15s}
+.wb:hover{transform:scale(1.12)}.wb.on{background:linear-gradient(135deg,#F7CF62,#D9A21B);color:#2B1D03}
+.tw .wb{position:static;display:inline-flex;width:32px;height:32px;font-size:17px}
+.wc{display:flex;gap:12px;background:#fff;border-radius:18px;padding:12px;box-shadow:var(--sh);margin-bottom:12px}
+.wi{flex:0 0 100px;height:100px;background:#fff;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.wi img{width:100%;height:100%;object-fit:contain}.wi i{font-style:normal;font-size:11px;color:#6b7684;text-align:center}
+.wm{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}.wm .tr{position:static;display:inline-block}
+.wf{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wf label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.wf select,.wf input,.wm textarea{background:#FCFAF4;border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-height:42px;width:100%}
+.wm textarea{min-height:64px;resize:vertical}
+.wa{display:flex;gap:8px;flex-wrap:wrap}.wa .btn{padding:8px 16px;min-height:40px}
+.btn.sure{background:#D13B3B;color:#fff;border-color:#D13B3B}
+.warn{background:#FFF1CC;border:1px solid #E6C77A;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px}
+@media(max-width:480px){.wc{flex-direction:column}.wi{flex:none;width:100%;height:170px}}
+.usd{display:block;font-size:12px;font-weight:500;color:var(--muted);line-height:1.3}
+.sizepanel{display:none}.sizehero{background:linear-gradient(135deg,#241606,#5C3F0C);color:#fff;border-radius:18px;padding:18px;margin-bottom:14px}.sizehero h2{margin:0 0 5px;font-size:20px}.sizehero p{margin:0;color:#f7e8c3;font-size:13px}.sizekpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0}.sizekpi{background:#fff;border-radius:15px;padding:14px;box-shadow:var(--sh)}.sizekpi b{display:block;font-size:22px}.sizekpi span{color:var(--muted);font-size:12px}.sizebox{background:#fff;border-radius:18px;padding:14px;margin:12px 0;box-shadow:var(--sh)}.sizetable{width:100%;min-width:620px}.sizebar{height:9px;background:#f0eadb;border-radius:99px;overflow:hidden;min-width:80px}.sizebar i{display:block;height:100%;background:linear-gradient(90deg,#D9A21B,#F7CF62)}.sizelegend{font-size:12px;color:var(--muted);line-height:1.7}.sizecontrols{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.sizecontrols select{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;min-height:46px;width:100%}.sizehint{background:#fff8e5;border:1px solid #ead49a;border-radius:12px;padding:12px;font-size:13px;color:#634b16;margin:12px 0}.sizepick{border:0;background:#e3f6ee;color:#087653;border-radius:10px;padding:6px 9px;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap}.sizepick:focus-visible{outline:3px solid #d9a21b;outline-offset:2px}.size-product{display:grid;grid-template-columns:76px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:start}.size-product img{width:76px;height:76px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#fff}.size-product .title{font-weight:600;line-height:1.5}.size-product .meta{font-size:12px;color:var(--muted);margin-top:5px}.size-product a{display:inline-block;margin-top:7px;color:#8a5a00;font-weight:700}
+.chip .usd{display:inline;margin-inline-start:5px;color:inherit;opacity:.8}
+.brandpanel{display:none}.brandhero{background:linear-gradient(135deg,#241606,#5C3F0C);color:#fff;border-radius:18px;padding:18px;margin-bottom:14px}.brandhero h2{margin:0 0 5px;font-size:20px}.brandhero p{margin:0;color:#f7e8c3;font-size:13px}.brandbox{background:#fff;border-radius:18px;padding:16px;margin:12px 0;box-shadow:var(--sh)}.brandbox textarea{width:100%;min-height:220px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:14px;background:#fcfaf4;line-height:1.9;direction:ltr;text-align:left}.brandactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.brandnote{color:var(--muted);font-size:13px}
+
+.extraPage{margin-bottom:16px}.extraHero{background:linear-gradient(135deg,#241606,#5C3F0C);color:#fff;border-radius:18px;padding:18px;margin-bottom:14px}.extraHero h2{margin:0 0 5px;font-size:20px}.extraHero p{margin:0;color:#f7e8c3;font-size:13px}.extraBox{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--sh)}.extraGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.extraGrid label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}.extraGrid input,.extraGrid select,.shipfields input,.shipfields select{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:9px 11px;background:#fcfaf4;color:var(--ink)}.extraActions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.calcResults{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-top:14px}.calcMetric{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fcfaf4}.calcMetric b{display:block;font-size:19px;overflow-wrap:anywhere}.calcMetric span{font-size:12px;color:var(--muted)}.calcMetric.good b{color:var(--up)}.calcMetric.bad b{color:var(--down)}.calcProductGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}.calcProductCard{border:1px solid var(--line);border-radius:15px;background:#fff;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}.calcProductCard:active{transform:scale(.99)}.calcProductCard.selected{border:2px solid #d6a21a;box-shadow:0 0 0 3px #f8edc9}.calcProductCard .cpimg{height:155px;background:#fcfaf4;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line)}.calcProductCard .cpimg img{width:100%;height:100%;object-fit:contain}.calcProductCard .cpbody{padding:12px}.calcProductCard .cptitle{font-weight:700;line-height:1.45;min-height:42px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.calcProductCard .cpbrand{font-size:12px;color:var(--muted);margin:5px 0}.calcProductCard .cpstats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.calcProductCard .cpstat{background:#fcfaf4;border-radius:9px;padding:8px}.calcProductCard .cpstat span{display:block;font-size:11px;color:var(--muted)}.calcProductCard .cpstat b{font-size:14px;overflow-wrap:anywhere}.calcProductCard .cpchoose{display:block;width:100%;border:0;border-radius:10px;background:linear-gradient(100deg,#dca91d,#f5cd58);padding:10px;font-weight:800;cursor:pointer}.calcProductSearch{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fcfaf4;margin-top:10px}.calcProductEmpty{background:#fcfaf4;padding:16px;border-radius:12px;color:var(--muted);margin-top:10px}@media(max-width:480px){.calcProductGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.calcProductCard .cpimg{height:120px}.calcProductCard .cpbody{padding:9px}.calcProductCard .cpstats{grid-template-columns:1fr}.calcProductCard .cptitle{font-size:13px}}.manageCard{border:1px solid var(--line);border-radius:16px;padding:13px;margin:12px 0;display:grid;grid-template-columns:80px 1fr;gap:12px}.manageCard img{width:80px;height:80px;object-fit:contain;border:1px solid var(--line);border-radius:10px}.manageCard .mfields{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}.manageCard label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}.manageCard input,.manageCard select{width:100%;min-height:39px;border:1px solid var(--line);border-radius:9px;padding:7px;background:#fcfaf4}.shipfields{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:10px}.shipfields label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}.shipStage{font-weight:700;color:var(--tx);background:#fbf1d6;border-radius:999px;padding:4px 9px;font-size:12px;display:inline-block}@media(max-width:480px){.manageCard{grid-template-columns:1fr}.manageCard img{width:100%;height:140px}.extraBox{padding:11px}}
+
+
+.usdHint{display:block;min-height:1.1em;margin:3px 0 6px;color:#986d12;font-size:.86em;font-weight:700;direction:ltr;text-align:left}.usdHint:empty{display:none}
+
+.sfh{font-weight:800;margin:0 0 8px}
+.sfi{display:flex;flex-direction:column;gap:8px;background:rgba(127,127,127,.08);border:1px solid rgba(127,127,127,.25);border-radius:14px;padding:12px;margin-bottom:8px}
+.sfi b{word-break:break-all}.sfi small{opacity:.75}
+.sfa{display:flex;gap:8px;flex-wrap:wrap}
+.oppCard{border-inline-start:5px solid var(--c1)}.oppHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}.oppHead b{font-size:16px;overflow-wrap:anywhere}.oppScore{flex:0 0 auto;border-radius:999px;padding:4px 12px;font-weight:700;font-size:13px;background:#FBF1D6;color:#7A5200}.oppScore.hi{background:#E3F6EE;color:#0B7A55}.oppScore.lo{background:#EEF0F4;color:#52607A}.oppNotes{margin:8px 0;padding-inline-start:18px;font-size:13.5px}.oppNotes .w{color:#B4531A}.oppNotes .g{color:#0B7A55}.oppItem{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.oppItem img{width:64px;height:64px;object-fit:contain;border-radius:10px;background:#fff;border:1px solid var(--line);flex:0 0 auto}.oppItem .t{font-size:13px;font-weight:500;overflow-wrap:anywhere}.oppItem .m{font-size:12px;color:var(--muted)}.oppItem .a{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.oppItem .a .btn{min-height:34px;padding:5px 14px;font-size:12.5px}.oppAvoid{font-size:13px;padding:8px 0;border-top:1px solid var(--line);overflow-wrap:anywhere}
+</style>
+<style>
+/* ===== صفحة المقارنة ===== */
+.kbt{position:absolute;bottom:8px;inset-inline-start:8px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.95);color:#8A94A6;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;box-shadow:0 4px 12px -4px rgba(0,0,0,.4);cursor:pointer;transition:transform .15s}
+.kbt:hover{transform:scale(1.12)}.kbt.on{background:#0E1A2E;color:#F7CF62}
+.tw .kbt{position:static;display:inline-flex;width:32px;height:32px;font-size:16px;margin-inline-start:6px;vertical-align:middle}
+.cmpsel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.cmpchip{display:inline-flex;align-items:center;gap:6px;background:#FBF1D6;color:#6B4A00;border-radius:999px;padding-block:4px;padding-inline:12px 4px;font-size:12.5px;font-weight:600;max-width:100%}
+.cmpchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+.cmpchip button,.cmprm{border:0;background:rgba(14,26,46,.1);color:#0E1A2E;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1;flex:none}
+.cmpchip button:hover,.cmprm:hover{background:#D13B3B;color:#fff}
+.cmpctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.cmpctl input[type=search],.cmpctl select{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-height:46px;box-shadow:var(--sh)}
+.cmpctl input[type=search]{flex:1 1 200px}
+.cmpi{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.cmpi:last-child{border-bottom:0}
+.cmpimg{flex:0 0 54px;height:54px;background:#fff;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.cmpimg img{width:100%;height:100%;object-fit:contain}.cmpimg i{font-style:normal;font-size:10px;color:#6b7684;text-align:center}
+.cmpim{flex:1;min-width:0}
+.cmpim .ti{min-height:0;-webkit-line-clamp:2}
+.cmpi .btn{padding:8px 14px;min-height:40px;font-size:13px}
+.cmpmore{color:var(--muted);font-size:12.5px;padding-top:8px}
+.cmpdec{background:radial-gradient(circle at 0% 0%,rgba(247,207,98,.35),transparent 50%),linear-gradient(135deg,#241606,#5C3F0C);color:#fff;border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 18px 40px -18px rgba(92,63,12,.6)}
+.cmpdh{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.cmpdh small{color:#f7e8c3;font-size:12.5px;display:block;margin-bottom:2px}
+.cmpdh h3{margin:0;font-size:16px;line-height:1.5}
+.cmpbig{flex:none;text-align:center;background:rgba(255,255,255,.12);border-radius:16px;padding:8px 14px;color:#F7CF62;font-size:30px;font-weight:700;line-height:1.1}
+.cmpbig small{font-size:11px;color:#f7e8c3;margin:0}
+.cmpdec p{margin:12px 0 0;color:#fff3d6;font-size:13.5px}
+.cmpdec ul{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px;font-size:13.5px}
+.cmpdec li.p::before{content:"✓ ";color:#7BE0B0;font-weight:700}.cmpdec li.c::before{content:"⚠ ";color:#FFB4A8}
+.cmpdec .links{margin-top:14px}
+.cmpdec .btn.ghost{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25);box-shadow:none}
+.cmprk{background:#fff;border-radius:18px;padding:12px;box-shadow:var(--sh);margin-bottom:10px;display:flex;gap:12px}
+.cmprk.win{outline:2px solid #D9A21B}
+.cmprk .cmpimg{flex-basis:76px;height:76px}
+.cmprk .bar2{margin:6px 0}
+.cmprk .chips{margin-top:6px}
+.chip.r{background:#FBE4E4;color:#A02727}.chip.ok{background:#E3F6EE;color:#0B7A55}.cmprk .chip{white-space:normal;line-height:1.5;padding:4px 10px}
+.cmpwarn{background:#FFF1CC;border:1px solid #E6C77A;border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:13px}
+.cmpw{max-height:none;margin-bottom:14px}
+.cmpt{font-size:13px;table-layout:fixed}
+.cmpt th,.cmpt td{white-space:normal;max-width:none;overflow:visible;text-overflow:clip;min-width:150px;vertical-align:top}
+.cmpt thead th{background:#fff;border-bottom:2px solid var(--c1);position:static;vertical-align:bottom}
+.cmpt thead th.cmph{position:sticky;inset-inline-start:0;z-index:3;min-width:112px;max-width:128px;background:#FBF1D6;vertical-align:middle}
+.cmpt thead th.win{background:#FFF8E5}
+.cmpt tbody th{position:sticky;top:auto;inset-inline-start:0;z-index:2;background:#FBF1D6;min-width:112px;max-width:128px;font-size:12.5px}
+.cmpt tbody tr{cursor:default}.cmpt tbody tr:hover{background:inherit}
+.cmpt tr.cmpg td{background:#FFF8E5;color:var(--tx);font-weight:700;font-size:13px;padding-block:7px}
+.cmpt td.best{background:#E3F6EE;color:#0B7A55;font-weight:700}
+.cmpna{color:#9AA5B6}
+.cmpt .cmpimg2{width:72px;height:72px;margin:6px 0;background:#fff;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.cmpt .cmpimg2 img{width:100%;height:100%;object-fit:contain;border-radius:0}
+.cmpt .cmpti{font-size:12.5px;font-weight:500;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cmpcrown{display:inline-block;background:linear-gradient(135deg,#FCD34D,#E0A100);color:#3A2600;font-size:11.5px;font-weight:700;padding:2px 10px;border-radius:999px;margin-bottom:4px}
+.cmpcost{width:100%;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:#FCFAF4}
+.cmpempty{text-align:center;color:var(--muted)}
+.cmpsw{display:flex;align-items:center;gap:8px;font-size:13.5px;min-height:46px}
+.cmpsw input{width:20px;height:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero"><h1>محلل منتجات Black Box</h1><p class="sub">ارفع ملف Excel من Helium 10 لتتصفح كل المنتجات وتفاصيلها الكاملة.</p></div>
+
+  <div class="nav"><div class="seg" role="group" aria-label="التنقل"><button id="nP" aria-pressed="true">المنتجات</button><button id="nS" aria-pressed="false">تحليل المقاسات</button><button id="nB" aria-pressed="false">العلامات التجارية</button><button id="nW" aria-pressed="false">المفضلة<span class="cnt" id="wn">0</span></button><button id="nK" aria-pressed="false">⇄ المقارنة<span class="cnt" id="kn">0</span></button><button id="nO" aria-pressed="false">🎯 تحليل الفرص</button><button id="nC" aria-pressed="false">حاسبة الأرباح</button><button id="nI" aria-pressed="false">المخزون</button><button id="nT" aria-pressed="false">تتبع الشحن</button><button id="nF" type="button">📁 ملفاتي المحفوظة</button><button id="nR" aria-pressed="false">تتبع السعر والتغييرات</button></div></div>
+  <div id="wl" style="display:none"><div class="top"><span class="fname" id="wcount"></span><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" id="wexp">نسخة احتياطية</button><button class="btn ghost" id="wimp">استيراد</button><input type="file" id="wfile" accept=".json" hidden></div></div><div id="wwarn"></div><div class="tools"><select id="wst" aria-label="الحالة"><option value="">كل الحالات</option><option>مراقبة</option><option>قيد الدراسة</option><option>تم الطلب</option><option>تم الشراء</option><option>مرفوض</option></select><select id="wsort" aria-label="ترتيب المنتجات"><option value="added:d">الأحدث إضافة</option><option value="growth:d">الأعلى نموًا (90 يومًا)</option><option value="yoy:d">الأعلى نموًا سنويًا</option><option value="price:d">السعر: الأعلى إلى الأقل</option><option value="price:a">السعر: الأقل إلى الأعلى</option><option value="sales:d">الأعلى مبيعًا شهريًا</option><option value="revenue:d">الأعلى إيرادًا شهريًا</option><option value="score:d">أعلى درجة فرصة</option><option value="bsr:a">أفضل ترتيب BSR</option><option value="rating:d">أعلى تقييم</option><option value="reviews:a">أقل عدد تقييمات</option></select></div>
+    <div class="sizebox" id="wCategoryFilters" style="margin-top:12px">
+      <h3 style="margin-top:0">فلاتر إضافية حسب الفئة</h3>
+      <div class="sizecontrols">
+        <select id="wcatfilter" aria-label="فئة المنتجات"><option value="">كل الفئات</option></select>
+        <select id="wattr1" aria-label="الخاصية الأولى"><option value="">كل الخصائص</option></select>
+        <select id="wattr2" aria-label="الخاصية الثانية"><option value="">كل الخصائص</option></select>
+        <select id="wattr3" aria-label="الخاصية الثالثة"><option value="">كل الخصائص</option></select>
+        <input id="wminprice" type="number" min="0" placeholder="أقل سعر" aria-label="أقل سعر" style="min-height:46px;border:1px solid var(--line);border-radius:12px;padding:10px;width:100%">
+        <input id="wmaxprice" type="number" min="0" placeholder="أعلى سعر" aria-label="أعلى سعر" style="min-height:46px;border:1px solid var(--line);border-radius:12px;padding:10px;width:100%">
+      </div>
+      <p class="sizelegend" id="wFilterHint">اختر الفئة لتظهر خصائص مناسبة لها، مثل المقاس واللون للملابس أو GSM والمادة والمقاسات للأقمشة والمناشف.</p>
+      <button class="btn ghost" id="wFilterReset" type="button">مسح الفلاتر الإضافية</button>
+    </div>
+    <div id="wlist"></div></div>
+  <div id="calcPage" class="extraPage" style="display:none">
+    <div class="extraHero"><h2>حاسبة الربح الذكية</h2><p>اختر منتجًا من المفضلة أو أدخل بياناته يدويًا. كل القيم قابلة للتعديل.</p></div>
+    <div class="extraBox"><div class="extraGrid">
+      <label style="grid-column:1/-1">Selected Favorite Product<select id="calcProduct"><option value="">اختر منتجًا من البطاقات أدناه</option></select></label>
+      <label>Marketplace<select id="calcMarket"><option value="USA">Amazon USA — USD</option><option value="UAE">Amazon UAE — AED</option><option value="SA">Amazon Saudi Arabia — SAR</option><option value="CA">Amazon Canada — CAD</option></select></label>
+      <label>Competitor Selling Price <span class="usdHint" data-usd-for="cSale"></span><input id="cSale" type="number" min="0" step="0.01" value="50"></label>
+      <label>Supplier Cost per Unit <span class="usdHint" data-usd-for="cBuy"></span><input id="cBuy" type="number" min="0" step="0.01" value="10"></label>
+      <label>China-to-Amazon Shipping per Unit <span class="usdHint" data-usd-for="cShip"></span><input id="cShip" type="number" min="0" step="0.01" value="2"></label>
+      <label>Amazon Referral Fee (%)<input id="cReferral" type="number" min="0" max="100" step="0.1" value="15"></label>
+      <label>FBA Fulfillment Fee per Unit <span class="usdHint" data-usd-for="cFba"></span><input id="cFba" type="number" min="0" step="0.01" value="5"></label>
+      <label>Storage, Preparation & Labels per Unit <span class="usdHint" data-usd-for="cOther"></span><input id="cOther" type="number" min="0" step="0.01" value="1"></label>
+      <label>Advertising (% of Selling Price)<input id="cAds" type="number" min="0" max="100" step="0.1" value="10"></label>
+      <label>Returns & Miscellaneous Reserve (%)<input id="cReturns" type="number" min="0" max="100" step="0.1" value="3"></label>
+      <label>Target Profit per Unit <span class="usdHint" data-usd-for="cTarget"></span><input id="cTarget" type="number" min="0" step="0.01" value="8"></label>
+      <label>Target Profit Margin (%)<input id="cMarginGoal" type="number" min="0" max="99.9" step="0.5" value="25"></label>
+      <label>Target ROI (%)<input id="cRoiGoal" type="number" min="0" max="1000" step="5" value="50"></label>
+      <label>Purchase Quantity (Units)<input id="cQty" type="number" min="1" step="1" value="100"></label>
+      <label>Available Purchasing Budget <span class="usdHint" data-usd-for="cBudget"></span><input id="cBudget" type="number" min="0" step="0.01" value="0" readonly></label>
+    </div><div class="sizehint" style="margin-top:12px"><b>Currency reference (editable)</b><div class="extraGrid" style="margin-top:8px"><label>1 USD = AED<input id="rateAED" type="number" min="0.01" step="0.0001" value="3.6725"></label><label>1 USD = SAR<input id="rateSAR" type="number" min="0.01" step="0.0001" value="3.75"></label><label>1 USD = CAD<input id="rateCAD" type="number" min="0.01" step="0.0001" value="1.38"></label></div><p class="sizelegend">Exchange rates are estimates, not live rates. Adjust them to your preferred rate. Calculator costs and sales must use the same marketplace currency.</p></div><div style="margin-top:18px"><h3 style="margin:0 0 5px">اختر المنتج من بطاقاته</h3><p class="sizelegend">تظهر صورة المنتج وسعره ومبيعاته الشهرية والإيراد والتقييمات. اضغط على البطاقة لاستخدام بياناته في حاسبة الأرباح.</p><input id="calcProductSearch" class="calcProductSearch" type="search" placeholder="ابحث بالعنوان أو ASIN أو العلامة التجارية"><select id="calcProductSort" class="calcProductSearch" aria-label="ترتيب بطاقات المنتجات"><option value="sales:d">الأعلى مبيعًا شهريًا</option><option value="growth:d">الأعلى نموًا (90 يومًا)</option><option value="yoy:d">الأعلى نموًا سنويًا</option><option value="price:d">السعر: الأعلى إلى الأقل</option><option value="price:a">السعر: الأقل إلى الأعلى</option><option value="revenue:d">الأعلى إيرادًا شهريًا</option><option value="score:d">أعلى درجة فرصة</option><option value="bsr:a">أفضل ترتيب BSR</option><option value="rating:d">أعلى تقييم</option><option value="reviews:a">أقل عدد تقييمات</option></select><div id="calcProductCards" class="calcProductGrid"></div></div><div class="extraActions"><button class="btn" id="calcRun">Calculate Profit</button><button class="btn ghost" id="calcSave">Save Calculation</button><button class="btn" id="calcSaveInventory">Save + Add to Inventory</button></div><div id="calcResults" class="calcResults"></div><p class="sizelegend">النتائج تقديرية. أدخل رسوم FBA الفعلية للسوق والحجم والوزن الصحيحين. سعر المنافس ليس ضمانًا لسعر البيع المستقبلي.</p></div>
+  </div>
+  <div id="inventoryPage" class="extraPage" style="display:none"><div class="extraHero"><h2>المشتريات والمخزون والميزانية</h2><p>سجّل الكمية التي اشتريتها والمبيعات؛ يحسب البرنامج الرصيد المتبقي تلقائيًا.</p></div><div id="walletBox" class="walletBox"></div><div class="extraBox"><div id="inventorySummary" class="sizekpis"></div><div id="inventoryList"></div></div></div>
+  <div id="shippingPage" class="extraPage" style="display:none"><div class="extraHero"><h2>تتبع الشحنات من الصين إلى أمازون</h2><p>سجّل مراحل الشحنة يدويًا ورقم التتبع وتاريخ الإرسال والوصول المتوقع. لا يتصل هذا الإصدار تلقائيًا بشركات الشحن.</p></div><div class="extraBox"><div id="shippingList"></div></div></div>
+  <div id="trackingPage" class="extraPage" style="display:none"><div class="extraHero"><h2>مراقبة السعر وتغييرات صفحة المنتج</h2><p>كل منتج تضيفه إلى المفضلة يدخل التتبع تلقائيًا. يقارن البرنامج ملفات البيانات الجديدة بالسجل السابق ويحفظ سجلًا يوميًا على الهاتف.</p></div><div class="extraBox"><div class="sizehint">مهم: ملف HTML وحده لا يستطيع جلب صفحات Amazon تلقائيًا بصورة موثوقة بسبب قيود الموقع والمتصفح. للحصول على تحديث جديد، ارفع ملف Black Box/Helium 10 محدّثًا؛ سيقارن البرنامج السعر والعنوان ورابط الصورة ورابط المنتج والوصف إذا كان عمود الوصف موجودًا. زر «تحديث الآن» يفحص البيانات المحمّلة حاليًا، وليس الإنترنت مباشرة.</div><div id="trackStartupAlert"></div><div class="extraActions"><button class="btn" id="trackRefresh">تحديث الآن / تسجيل اليوم</button><button class="btn ghost" id="trackExport">تصدير سجل التغييرات JSON</button><button class="btn ghost" id="fullBackup">نسخة احتياطية كاملة</button><button class="btn ghost" id="fullRestore">استعادة نسخة كاملة</button><input id="fullRestoreFile" type="file" accept=".json" hidden><button class="btn ghost" id="trackClear">مسح سجل التغييرات</button></div><div class="extraGrid"><label>منتج الرسم البياني<select id="historyProduct"><option value="">اختر منتجًا</option></select></label><label>مؤشر الرسم<select id="historyMetric"><option value="price">السعر</option><option value="sales">المبيعات الشهرية</option><option value="rev">الإيراد الشهري</option></select></label></div><div id="historyChart" class="sizebox"><p class="sizelegend">سجّل أكثر من لقطة بيانات لهذا المنتج حتى يظهر اتجاهه التاريخي.</p></div><div id="trackSummary" class="sizekpis"></div><div id="trackStatus" class="sizelegend"></div><div id="trackList"></div></div></div>
+  <div id="cmpPage" class="extraPage" style="display:none">
+    <div class="extraHero"><h2>مقارنة المنتجات المتشابهة</h2><p>اختر من 2 إلى 6 منتجات متشابهة لتقارن العنوان والمقاس واللون والحجم والسعر وكل الأرقام، ثم يرشّح لك البرنامج منتجاً واحداً للبيع مع الأسباب والمخاطر.</p></div>
+    <div class="extraBox">
+      <div class="cmpsel" id="cmpChips"></div>
+      <div class="cmpctl">
+        <input type="search" id="cmpQ" placeholder="ابحث بالعنوان أو العلامة أو ASIN لإضافة منتج" aria-label="بحث عن منتج للمقارنة">
+        <select id="cmpSrc" aria-label="مصدر المنتجات"><option value="all">كل المنتجات</option><option value="fav">من المفضلة فقط</option><option value="file">من الملف المرفوع فقط</option></select>
+      </div>
+      <div id="cmpList"></div>
+      <div class="cmpctl" style="margin:12px 0 0"><button class="btn ghost" type="button" data-act="sim">✨ أضف منتجات مشابهة للأول</button><button class="btn ghost" type="button" data-act="clear">مسح الكل</button></div>
+    </div>
+    <div id="cmpResult"></div>
+  </div>
+  <div id="oppPage" class="extraPage" style="display:none">
+    <div class="extraHero"><h2>تحليل الفرص</h2><p>يفلتر منتجات الملف المرفوع، يجمعها في نيتشات، ويرتبها حسب الطلب وسهولة الدخول، ثم يحذّرك من المنتجات الخطرة (ملكية فكرية، كهربائي، سوائل، موضة عابرة).</p></div>
+    <div class="extraBox"><h3 style="margin:0 0 8px;font-size:16px">فلاتر التحليل</h3>
+      <div class="extraGrid">
+        <label>أقل مبيعات شهرية<input id="oSales" type="number" min="0" inputmode="numeric"></label>
+        <label>أقصى عدد تقييمات<input id="oRev" type="number" min="0" inputmode="numeric"></label>
+        <label>أقل سعر<input id="oPmin" type="number" min="0" inputmode="decimal"></label>
+        <label>أعلى سعر<input id="oPmax" type="number" min="0" inputmode="decimal"></label>
+        <label>أقصى وزن (كما في الملف)<input id="oW" type="number" min="0" step="0.1" inputmode="decimal"></label>
+        <label>أقل اتجاه مبيعات 90 يومًا (%)<input id="oTr" type="number" inputmode="numeric"></label>
+        <label>أقصى عدد بائعين<input id="oSel" type="number" min="1" inputmode="numeric"></label>
+        <label>أقصى عدد متغيرات<input id="oVr" type="number" min="0" inputmode="numeric"></label>
+      </div>
+      <div class="extraActions"><button class="btn" id="oRun" type="button">تحليل</button><button class="btn ghost" id="oReset" type="button">إعادة الضبط</button><button class="btn ghost" id="oCopy" type="button">نسخ التقرير</button></div>
+    </div>
+    <div id="oppOut"></div>
+  </div>
+  <div id="drop">
+    <div class="ic">📊</div><h2>اسحب الملف إلى هنا</h2>
+    <p>يدعم xlsx وxls وcsv. المعالجة تتم على جهازك ولا يُرفع الملف إلى أي خادم.</p>
+    <button class="btn" id="pick">اختيار ملف Excel</button>
+    <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+    <div id="savedFiles" style="margin-top:22px;text-align:right"></div>
+  </div>
+
+  <div id="sizePage" class="sizepanel">
+    <div class="sizehero"><h2>تحليل المقاسات للملابس والصدريات</h2><p>قارن انتشار المقاسات ومؤشرات الطلب والمنافسة داخل ملف Helium 10 الذي رفعته.</p></div>
+    <div class="sizecontrols"><select id="sizeType"><option value="all">كل المنتجات</option><option value="bra">حمالات الصدر والصدريات</option><option value="clothing">الملابس</option></select><select id="sizeMetric"><option value="products">المنافسة: عدد المنتجات</option><option value="sales">الطلب: المبيعات الشهرية للمنتجات</option><option value="revenue">الإيراد الشهري للمنتجات</option><option value="reviews">المنافسة: متوسط التقييمات</option></select></div>
+    <div id="sizeKpis" class="sizekpis"></div><div id="sizeWarning" class="sizehint">ارفع ملف Helium 10 أولًا. سيحلل هذا القسم المقاسات المكتوبة في عناوين المنتجات.</div>
+    <div id="sizeSummary"></div><div class="sizebox"><h3>تفصيل المقاسات</h3><div class="tw"><table class="sizetable"><thead><tr><th>المقاس</th><th>عدد المنتجات</th><th>نسبة المنافسة</th><th>مجموع المبيعات الشهرية</th><th>متوسط التقييمات</th><th>متوسط السعر</th><th>مؤشر أولي</th></tr></thead><tbody id="sizeRows"></tbody></table></div><p class="sizelegend">المؤشر الأولي يقارن المبيعات الشهرية المجمعة بعدد المنتجات التي تذكر المقاس، وليس مبيعات ذلك المقاس الفعلية.</p></div>
+    <div class="sizebox"><h3>المنتجات التي تحتوي على المقاسات</h3><div id="sizeProducts"></div></div>
+  </div>
+  <div id="brandPage" class="brandpanel">
+    <div class="brandhero"><h2>قائمة العلامات التجارية</h2><p>استخراج جميع العلامات التجارية الفريدة من ملف Helium 10، مفصولة بفاصلة وجاهزة للنسخ.</p></div>
+    <div class="brandbox">
+      <div class="sizekpis" id="brandKpis"></div>
+      <label for="brandOutput"><strong>العلامات التجارية (مفصولة بفاصلة)</strong></label>
+      <textarea id="brandOutput" readonly placeholder="ارفع ملف Helium 10 أولاً لعرض العلامات التجارية..."></textarea>
+      <div class="brandactions"><button class="btn" id="brandCopy">نسخ جميع العلامات</button><button class="btn ghost" id="brandDownload">تنزيل ملف TXT</button><button class="btn ghost" id="brandRefresh">تحديث القائمة</button></div>
+      <p class="brandnote" id="brandNote">يتم استخراج العلامات من عمود Brand في الملف، مع حذف التكرارات والقيم الفارغة.</p>
+    </div>
+  </div>
+  <div id="app">
+    <div class="top">
+      <span class="fname" id="fname"></span>
+      <button class="btn" id="saveFile">💾 حفظ الملف</button> <button class="btn ghost" id="again">رفع ملف آخر</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="بحث بالعنوان أو العلامة أو ASIN">
+      <select id="cat" aria-label="الفئة"></select>
+      <select id="ful" aria-label="الشحن"></select>
+      <select id="tier" aria-label="الدرجة"><option value="">كل الدرجات</option><option value="top">ماسي + ذهبي</option><option value="ماسي">💎 ماسي</option><option value="ذهبي">🥇 ذهبي</option><option value="فضي">🥈 فضي</option><option value="نحاسي">🥉 نحاسي</option></select>
+      <select id="siz" aria-label="المقاس"><option value="">كل المقاسات</option></select>
+      <select id="col" aria-label="اللون"><option value="">كل الألوان</option></select>
+      <select id="sort" aria-label="الترتيب">
+        <option value="_sc:d">الأعلى درجة فرصة</option>
+        <option value="Monthly Revenue:d">الأعلى إيراداً</option>
+        <option value="Monthly Sales:d">الأعلى مبيعاً</option>
+        <option value="Price:a">الأقل سعراً</option>
+        <option value="Price:d">الأعلى سعراً</option>
+        <option value="BSR:a">أفضل BSR</option>
+        <option value="Reviews Rating:d">الأعلى تقييماً</option>
+        <option value="Review Count:a">الأقل تقييمات</option>
+        <option value="Listing Age (Months):a">الأحدث عمراً</option>
+        <option value="Sales Trend (90 days) (%):d">الأعلى نمواً</option>
+      </select>
+    </div>
+    <div class="bar">
+      <span class="count" id="count"></span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="gold">🏆 الفرص الذهبية</button>
+        <button class="btn ok" id="copy">نسخ ASIN المعروضة</button>
+        <div class="seg" role="group" aria-label="طريقة العرض">
+          <button id="vc" aria-pressed="true">بطاقات</button>
+          <button id="vt" aria-pressed="false">جدول</button>
+        </div>
+      </div>
+    </div>
+    <div id="out"></div>
+  </div>
+</div>
+
+<div id="modal" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const L={'URL':'رابط المنتج','Image URL':'رابط الصورة','ASIN':'ASIN','Title':'العنوان','Brand':'العلامة التجارية','Fulfillment':'الشحن','Category':'الفئة','BSR':'ترتيب BSR','UPC':'UPC','GTIN':'GTIN','EAN':'EAN','ISBN':'ISBN','Subcategory':'الفئة الفرعية','Subcategory BSR':'ترتيب الفئة الفرعية','Price':'السعر','Price Trend (90 days) (%)':'اتجاه السعر (90 يوماً)','Monthly Sales':'المبيعات الشهرية','ASIN Sales':'مبيعات المنتج (ASIN)','Parent Level Sales':'مبيعات المجموعة (Parent)','ASIN Revenue':'إيراد المنتج (ASIN)','Parent Level Revenue':'إيراد المجموعة (Parent)','Sales Trend (90 days) (%)':'اتجاه المبيعات (90 يوماً)','Monthly Revenue':'الإيراد الشهري','Review Count':'عدد التقييمات','Reviews Rating':'متوسط التقييم','Seller':'البائع','Seller Country/Region':'بلد البائع','Number of Active Sellers':'البائعون النشطون','Last Year Sales':'مبيعات السنة الماضية','Sales Year Over Year (%)':'نمو المبيعات السنوي','Shipping Details':'تفاصيل الشحن','Length':'الطول','Width':'العرض','Height':'الارتفاع','Weight':'الوزن','Storage Fee (Jan - Sep)':'رسوم التخزين (يناير–سبتمبر)','Storage Fee (Oct - Dec)':'رسوم التخزين (أكتوبر–ديسمبر)','Best Sales Period':'أفضل فترة مبيعات','Listing Age (Months)':'عمر المنتج (شهور)','Number of Images':'عدد الصور','Variation Count':'عدد المتغيرات','Sales to Reviews':'نسبة المبيعات إلى التقييمات'};
+const G=[['الأساسيات',['ASIN','Brand','Category','Subcategory','Fulfillment']],['المبيعات والسعر',['Price','Price Trend (90 days) (%)','Monthly Sales','Sales Trend (90 days) (%)','Monthly Revenue','Last Year Sales','Sales Year Over Year (%)','Best Sales Period']],['الترتيب',['BSR','Subcategory BSR']],['التقييمات',['Review Count','Reviews Rating','Sales to Reviews']],['البائعون',['Seller','Seller Country/Region','Number of Active Sellers']],['المنتج',['Listing Age (Months)','Number of Images','Variation Count']],['الأبعاد والشحن',['Length','Width','Height','Weight','Shipping Details','Storage Fee (Jan - Sep)','Storage Fee (Oct - Dec)']],['الباركود',['UPC','GTIN','EAN','ISBN']]];
+const TIERS=[[80,'t-d','ماسي','💎'],[65,'t-g','ذهبي','🥇'],[50,'t-s','فضي','🥈'],[0,'t-c','نحاسي','🥉']];
+const tier=v=>TIERS.find(t=>v>=t[0]);
+const tb=r=>{const t=tier(r._sc);return `<span class="tr ${t[1]}">${t[3]} ${t[2]} ${r._sc}</span>`};
+function score(r){
+  const f=3.6725/(CUR.r||3.6725),n=k=>(k==='Price'||k==='Monthly Revenue')?num(r[k])*f:num(r[k]),lin=(v,m,w)=>isNaN(v)?0:Math.max(0,Math.min(v/m,1))*w;
+  const rc=n('Review Count'),pr=n('Price'),rt=n('Reviews Rating'),age=n('Listing Age (Months)'),tr=n('Sales Trend (90 days) (%)'),yy=n('Sales Year Over Year (%)'),ns=n('Number of Active Sellers');
+  const B=[['الطلب (المبيعات)',lin(n('Monthly Sales'),300,25),25],['الإيراد',lin(n('Monthly Revenue'),15000,10),10],['قلة التقييمات',isNaN(rc)?0:rc<50?20:rc<150?16:rc<300?10:rc<600?5:0,20],['المبيعات إلى التقييمات',lin(n('Sales to Reviews'),10,10),10],['حداثة المنتج',isNaN(age)?0:age<=12?8:age<=24?5:2,8],['السعر',isNaN(pr)?0:pr>=50&&pr<=200?10:(pr>=40&&pr<50)||(pr>200&&pr<=300)?6:pr>300?3:0,10],['التقييم',isNaN(rt)?0:rt>=3.8&&rt<=4.4?5:rt<=4.6?3:1,5],['النمو',(tr>0?4:0)+(yy>=0?3:0),7],['قلة المنافسين',(String(r.Seller).toLowerCase().includes('amazon')?0:3)+(!isNaN(ns)&&ns<=5?2:0),5]];
+  return {t:Math.round(B.reduce((a,b)=>a+b[1],0)),B};
+}
+const SZ=['XS','S','M','L','XL','XXL','3XL','4XL','5XL','6XL','Plus Size','One Size'];
+const CL={black:['Black','أسود'],white:['White','أبيض'],red:['Red','أحمر'],blue:['Blue','أزرق'],green:['Green','أخضر'],pink:['Pink','وردي'],purple:['Purple','بنفسجي'],yellow:['Yellow','أصفر'],orange:['Orange','برتقالي'],brown:['Brown','بني'],grey:['Grey','رمادي'],beige:['Beige','بيج'],nude:['Nude','لحمي'],navy:['Navy','كحلي'],burgundy:['Burgundy','عنابي'],wine:['Wine','نبيذي'],khaki:['Khaki','كاكي'],cream:['Cream','كريمي'],ivory:['Ivory','عاجي'],gold:['Gold','ذهبي'],silver:['Silver','فضي'],teal:['Teal','أخضر مزرق'],coral:['Coral','مرجاني'],lavender:['Lavender','لافندر'],maroon:['Maroon','أحمر داكن'],mint:['Mint','نعناعي'],rose:['Rose','ورد'],champagne:['Champagne','شامبين'],apricot:['Apricot','مشمشي'],multicolor:['Multicolor','متعدد الألوان']};
+const ALIAS={gray:'grey',skin:'nude',multi:'multicolor',colorful:'multicolor',multicolored:'multicolor'};
+function detect(t){
+  t=String(t||'');const z=new Set(),k=new Set();
+  const re=/(?:^|[\s,(\/&+\-])(XXXXXL|XXXXL|XXXL|XXL|XL|XS|[2-6] ?XL|[SML])(?=$|[\s,)\/&+.\-])/g;let m;
+  while((m=re.exec(t))){let v=m[1].replace(' ','');v={'2XL':'XXL',XXXL:'3XL',XXXXL:'4XL',XXXXXL:'5XL'}[v]||v;z.add(v)}
+  if(/plus[\s-]*size/i.test(t))z.add('Plus Size');if(/(one|free)[\s-]*size/i.test(t))z.add('One Size');
+  (t.toLowerCase().match(/[a-z]+/g)||[]).forEach(w=>{w=ALIAS[w]||w;if(CL[w])k.add(w)});
+  return {z:[...z],k:[...k]};
+}
+function fillZK(){
+  const zc={},kc={};rows.forEach(r=>{r._z.forEach(v=>zc[v]=(zc[v]||0)+1);r._k.forEach(v=>kc[v]=(kc[v]||0)+1)});
+  $('#siz').innerHTML='<option value="">كل المقاسات</option>'+SZ.filter(v=>zc[v]).map(v=>`<option value="${v}">${v} (${zc[v]})</option>`).join('');
+  $('#col').innerHTML='<option value="">كل الألوان</option>'+Object.keys(kc).sort((a,b)=>kc[b]-kc[a]).map(v=>`<option value="${v}">${CL[v][1]} — ${CL[v][0]} (${kc[v]})</option>`).join('');
+}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{if(typeof v==='number')return v;const n=parseFloat(String(v).replace(/,/g,''));return isNaN(n)?NaN:n};
+const fmt=n=>isNaN(n)?'—':n.toLocaleString('en-US',{maximumFractionDigits:2});
+const lab=k=>L[k]||k;
+const isPct=k=>/\(%\)/.test(k);
+let rows=[],view=[],mode='c',cols=[],lastBuf=null,lastName='';
+
+let CUR={c:'AED',r:3.6725,code:'UAE'};
+function setMarketFrom(r,name){
+  const u=String(r.URL||'')+' '+String(name||'');let code='UAE';
+  if(/amazon\.ae/i.test(u))code='UAE';else if(/amazon\.sa/i.test(u))code='SA';else if(/amazon\.ca/i.test(u))code='CA';else if(/amazon\.com\b/i.test(u)||/(^|[\s_\-])US_/i.test(u))code='USA';
+  const mi=marketInfo(code);CUR={c:mi.currency,r:mi.perUSD||1,code};
+  const sel=$('#calcMarket');if(sel&&sel.value!==code){sel.value=code;try{updateUsdHints()}catch(e){}}
+}
+function val(k,v,html){
+  if(v===''||v==null||String(v).toUpperCase()==='N/A')return '—';
+  if(isPct(k)){const n=num(v);if(isNaN(n))return esc(v);return `<span class="${n>0?'up':n<0?'down':''}">${n>0?'▲ ':n<0?'▼ ':''}${fmt(Math.abs(n))}%</span>`}
+  if(k==='Price'){const n=num(v);return isNaN(n)?'—':CUR.c==='USD'?fmt(n)+' USD':fmt(n)+' '+CUR.c+'<span class="usd">≈ $'+fmt(n/CUR.r)+'</span>'}
+  if(k==='Monthly Revenue')return fmt(num(v))+' '+CUR.c;
+  if(typeof v==='number')return fmt(v);
+  return esc(v);
+}
+function img(r,cls){
+  const u=r['Image URL'];
+  if(!u)return '<i>لا توجد صورة</i>';
+  return `<img src="${esc(u)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<i>تعذّر تحميل الصورة</i>'">`;
+}
+function load(buf,name){
+  try{
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    rows=XLSX.utils.sheet_to_json(ws,{defval:''}).filter(r=>Object.values(r).some(v=>v!==''));
+    if(!rows.length){toast('الملف فارغ أو لا يحتوي بيانات');return}
+    rows.forEach(r=>{
+      const _n=v=>{const x=Number(String(v).replace(/,/g,''));return v===''||v===undefined||!Number.isFinite(x)?NaN:x};
+      const aS=_n(r['ASIN Sales']),pS=_n(r['Parent Level Sales']),aR=_n(r['ASIN Revenue']),pR=_n(r['Parent Level Revenue']);
+      const useParent=Number.isFinite(pS)&&(!Number.isFinite(aS)||pS>aS);
+      if(r['Monthly Sales']===undefined)r['Monthly Sales']=useParent?pS:(Number.isFinite(aS)?aS:'');
+      if(r['Monthly Revenue']===undefined)r['Monthly Revenue']=useParent?(Number.isFinite(pR)?pR:''):(Number.isFinite(aR)?aR:(Number.isFinite(pR)?pR:''));
+    });
+    setMarketFrom(rows[0],name);
+    cols=Object.keys(rows[0]);rows.forEach(r=>{const x=score(r);r._sc=x.t;r._sd=x.B;const d=detect(r.Title);r._z=d.z;r._k=d.k});
+    lastBuf=buf;lastName=name;
+    $('#fname').textContent=name+'  —  '+rows.length+' منتج، '+cols.length+' عموداً';
+    fillSel('#cat','كل الفئات','Category');fillSel('#ful','كل أنواع الشحن','Fulfillment');fillZK();
+    loaded=true;let matched=0;rows.forEach(r=>{const w=watch[r.ASIN];if(!w)return;matched++;const n=snap(r);recordTrackSnapshot(w,n,false);if(!isNaN(n.price)&&n.price!==w.price&&typeof w.price==='number')w.prevPrice=w.price;Object.assign(w,n,{added:w.added,status:w.status,note:w.note,target:w.target,calc:w.calc,purchaseQty:w.purchaseQty,soldQty:w.soldQty,shipment:w.shipment,history:w.history})});save();saveHistory();showTab(window._oppAfter?'O':'P');window._oppAfter=false;if(typeof checkPriceAlerts==='function')checkPriceAlerts();
+    apply();
+  }catch(e){toast('تعذّرت قراءة الملف. تأكد أنه ملف Excel صالح')}
+}
+function fillSel(id,all,k){
+  const vs=[...new Set(rows.map(r=>r[k]).filter(v=>v!==''))].sort();
+  $(id).innerHTML=`<option value="">${all}</option>`+vs.map(v=>`<option>${esc(v)}</option>`).join('');
+}
+function apply(){
+  const q=$('#q').value.trim().toLowerCase(),c=$('#cat').value,f=$('#ful').value,tv=$('#tier').value,zv=$('#siz').value,kv=$('#col').value;
+  const [sk,sd]=$('#sort').value.split(':');
+  view=rows.filter(r=>(!c||r.Category===c)&&(!zv||r._z.includes(zv))&&(!kv||r._k.includes(kv))&&(!tv||(tv==='top'?r._sc>=65:tier(r._sc)[2]===tv))&&(!f||r.Fulfillment===f)&&(!q||[r.Title,r.Brand,r.ASIN].some(x=>String(x).toLowerCase().includes(q))));
+  view.sort((a,b)=>{const x=num(a[sk]),y=num(b[sk]);if(isNaN(x)&&isNaN(y))return 0;if(isNaN(x))return 1;if(isNaN(y))return -1;return sd==='a'?x-y:y-x});
+  stats();render();
+}
+function stats(){
+  const sum=k=>view.reduce((s,r)=>s+(num(r[k])||0),0);
+  const avg=k=>{const a=view.map(r=>num(r[k])).filter(n=>!isNaN(n));return a.length?a.reduce((s,n)=>s+n,0)/a.length:NaN};
+  const C=['#FFF1CC','#FDE7A8','#E3F6EE','#FFE9D6','#EFE9FF','#FFF6CC','#E0F5FA'],I=['📦','💎','💰','📈','🏷️','⭐','💬'];const S=[[view.length,'عدد المنتجات'],[view.filter(r=>r._sc>=65).length,'فرص ماسية وذهبية'],[fmt(Math.round(sum('Monthly Revenue'))),'إجمالي الإيراد الشهري ('+CUR.c+')'],[fmt(sum('Monthly Sales')),'إجمالي المبيعات الشهرية'],[fmt(avg('Price')),'متوسط السعر ('+CUR.c+')'],[fmt(avg('Reviews Rating')),'متوسط التقييم'],[fmt(avg('Review Count')),'متوسط عدد التقييمات']];
+  $('#stats').innerHTML=S.map((s,i)=>`<div class="stat"><em style="background:${C[i]}">${I[i]}</em><div><b>${s[0]}</b><span>${s[1]}</span></div></div>`).join('');
+  $('#count').textContent=`يعرض ${view.length} من ${rows.length}`;
+}
+function render(){
+  setTimeout(()=>{try{syncCmp()}catch(e){}},0);const o=$('#out');
+  if(!view.length){o.innerHTML='<div class="empty">لا توجد منتجات مطابقة. غيّر البحث أو الفلاتر.</div>';return}
+  if(mode==='c'){
+    o.innerHTML='<div id="grid">'+view.map((r,i)=>`<button class="card" data-i="${i}"><div class="ph">${img(r)}${r.BSR!==''&&String(r.BSR).toUpperCase()!=='N/A'?`<span class="bd">BSR ${fmt(num(r.BSR))}</span>`:''}${tb(r)}${wbtn(r)}${kbtn(r)}</div><div class="cb"><div class="br">${esc(r.Brand)}</div><div class="ti">${esc(r.Title)}</div><div class="pr">${val('Price',r.Price)}</div><div class="chips"><span class="chip g">إيراد ${fmt(num(r['Monthly Revenue']))}</span><span class="chip">مبيعات ${fmt(num(r['Monthly Sales']))}</span></div><div class="ft"><span><b>★ ${val('x',r['Reviews Rating'])}</b> (${fmt(num(r['Review Count']))})</span><span>${val('Sales Trend (90 days) (%)',r['Sales Trend (90 days) (%)'])}</span></div></div></button>`).join('')+'</div>';
+  }else{
+    const ks=cols.filter(k=>k!=='Image URL'&&k!=='URL');
+    o.innerHTML='<div class="tw"><table><thead><tr><th>الصورة</th><th>الدرجة</th><th>مراقبة</th>'+ks.map(k=>`<th>${esc(lab(k))}</th>`).join('')+'</tr></thead><tbody>'+view.map((r,i)=>`<tr data-i="${i}"><td>${r['Image URL']?`<img src="${esc(r['Image URL'])}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:''}</td><td>${tb(r)}</td><td>${wbtn(r)}${kbtn(r)}</td>`+ks.map(k=>`<td title="${esc(r[k])}">${val(k,r[k])}</td>`).join('')+'</tr>').join('')+'</tbody></table></div>';
+  }
+}
+function openM(r){
+  const used=new Set(['Title','Image URL','URL']);
+  let h=`<div class="sh"><h3>${esc(r.Title)}</h3><button class="btn ghost" id="x" aria-label="إغلاق">إغلاق</button></div><div class="big">${img(r)}</div>`;
+  h+=`<div class="tb ${tier(r._sc)[1]}"><span>${tier(r._sc)[3]} ${tier(r._sc)[2]}</span><span>${r._sc}/100</span></div>`+r._sd.map(b=>`<div class="bk"><span>${b[0]}</span><div class="bar2"><i style="width:${b[2]?b[1]/b[2]*100:0}%"></i></div><b>${Math.round(b[1])}/${b[2]}</b></div>`).join('')+'<div class="note">الدرجة تقديرية حسب أرقام Helium 10 ولا تضمن الربح.</div>';
+  if(r._z.length||r._k.length)h+='<div class="g">من العنوان</div>'+(r._z.length?`<div class="row"><span>المقاس</span><b>${r._z.join('، ')}</b></div>`:'')+(r._k.length?`<div class="row"><span>اللون</span><b>${r._k.map(v=>CL[v][1]+' ('+CL[v][0]+')').join('، ')}</b></div>`:'');
+  const grp=(t,ks)=>{ks=ks.filter(k=>k in r);ks.forEach(k=>used.add(k));return ks.length?`<div class="g">${t}</div>`+ks.map(k=>`<div class="row"><span>${esc(lab(k))}</span><b>${val(k,r[k])}</b></div>`).join(''):''};
+  G.forEach(g=>h+=grp(g[0],g[1]));
+  h+=grp('أعمدة أخرى',cols.filter(k=>!used.has(k)));
+  h+='<div class="links"><button class="btn" id="mw"></button><button class="btn ghost" id="toCalc">حساب الربح لهذا المنتج</button><button class="btn ghost" id="mk"></button>'+(r.URL?`<a class="btn" href="${esc(r.URL)}" target="_blank" rel="noopener">فتح في أمازون</a>`:'')+(r['Image URL']?`<a class="btn ghost" href="${esc(r['Image URL'])}" target="_blank" rel="noopener">فتح الصورة</a>`:'')+'</div>';
+  $('#sheet').innerHTML=h;$('#modal').classList.add('on');
+  $('#x').onclick=closeM;$('#x').focus();const mwL=()=>$('#mw').textContent=watch[r.ASIN]?'★ في المراقبة (إزالة)':'☆ إضافة إلى المراقبة';mwL();$('#mw').onclick=()=>{toggleW(r);mwL()};$('#toCalc').onclick=()=>{if(!watch[r.ASIN])toggleW(r);showTab('C');$('#calcProduct').value=r.ASIN;loadCalcProduct();closeM()};const mkL=()=>$('#mk').textContent=cmp.sel.includes(String(r.ASIN))?'⇄ في المقارنة (إزالة)':'⇄ أضف للمقارنة';mkL();$('#mk').onclick=()=>{cmpToggle(r.ASIN,r);mkL()};
+}
+const closeM=()=>$('#modal').classList.remove('on');
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',2200)}
+function read(f){if(!f)return;const fr=new FileReader();fr.onload=e=>load(e.target.result,f.name);fr.readAsArrayBuffer(f)}
+
+const KEY='bb_watch_v1',TRACK_KEY='bb_product_history_v1',STAT=['مراقبة','قيد الدراسة','التواصل مع المورد','انتظار عرض السعر','تم حساب الربحية','تم طلب عينة','تم الشراء','قيد الشحن','وصل إلى مستودع أمازون','قيد البيع','مرفوض','مؤجل'];
+let watch={},canSave=true,loaded=false,trackHistory=[];
+try{trackHistory=JSON.parse(localStorage.getItem(TRACK_KEY)||'[]')||[]}catch(e){trackHistory=[]}
+const saveHistory=()=>{try{localStorage.setItem(TRACK_KEY,JSON.stringify(trackHistory.slice(-5000)))}catch(e){toast('مساحة الحفظ ممتلئة؛ صدّر السجل واحتفظ بنسخة')}};
+try{watch=JSON.parse(localStorage.getItem(KEY)||'{}')||{};localStorage.setItem('bb_t','1');localStorage.removeItem('bb_t')}catch(e){canSave=false}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(watch))}catch(e){canSave=false}};
+const descOf=r=>r.Description??r['Product Description']??r['Product description']??r['Bullet Points']??r['Product Details']??'';
+const snap=r=>({asin:r.ASIN,title:r.Title,brand:r.Brand,category:r.Category||'',subcategory:r.Subcategory||'',fulfillment:r.Fulfillment||'',img:r['Image URL'],url:r.URL,description:descOf(r),price:num(r.Price),sales:num(r['Monthly Sales']),rev:num(r['Monthly Revenue']),rating:num(r['Reviews Rating']),reviews:num(r['Review Count']),bsr:num(r.BSR),sc:r._sc,salesTrend:num(r['Sales Trend (90 days) (%)']),priceTrend:num(r['Price Trend (90 days) (%)']),yoy:num(r['Sales Year Over Year (%)'])});
+const wbtn=r=>`<span class="wb ${watch[r.ASIN]?'on':''}" data-a="${esc(r.ASIN)}" role="button" aria-label="إضافة أو إزالة من المراقبة">★</span>`;
+function syncStars(){document.querySelectorAll('.wb').forEach(e=>e.classList.toggle('on',!!watch[e.dataset.a]));$('#wn').textContent=Object.keys(watch).length}
+function toggleW(r){if(!r)return;const a=r.ASIN;if(watch[a]){delete watch[a];toast('أُزيل من المراقبة')}else{watch[a]=Object.assign(snap(r),{status:STAT[0],note:'',target:'',added:Date.now(),history:[]});recordTrackSnapshot(watch[a],snap(r),true);toast('أُضيف إلى المفضلة والتتبع تلقائيًا')}save();saveHistory();syncStars()}
+function isBra(r){const t=[r.Title,r.Category,r.Subcategory,r.Brand].join(' ').toLowerCase();return /bra|bralette|brassiere|push.?up|underwire|wireless bra|sports bra|nursing bra|حمالة|صدرية|سوتيان/.test(t)}
+function isClothing(r){const t=[r.Title,r.Category,r.Subcategory].join(' ').toLowerCase();return /clothing|apparel|dress|shirt|top|legging|pants|jeans|skirt|shorts|swimwear|lingerie|shapewear|bodysuit|robe|pajama|sleepwear|ملابس|فستان|قميص|بنطال|تنورة|لانجري|ملابس سباحة/.test(t)}
+function braSizes(r){const t=String(r.Title||'').toUpperCase().replace(/[–—]/g,'-');const out=new Set();let m;const re=/(?:^|[^A-Z0-9])(30|32|34|36|38|40|42|44|46|48|60|65|70|75|80|85|90|95|100|105|110|115|120)\s*(AA|A|B|C|D|DD|DDD|E|F|G|H|I|J)(?=$|[^A-Z])/g;while((m=re.exec(t)))out.add(m[1]+m[2]);return [...out]}
+function sizeLabels(r){const d=detect(r.Title||'');let sizes=d.z.slice();const bra=braSizes(r);sizes=sizes.concat(bra);const seen=new Set();return sizes.filter(x=>!seen.has(x)&&seen.add(x))}
+let sizeEntries=[];
+function renderSizes(){if(!loaded||!rows.length){$('#sizeWarning').textContent='ارفع ملف Helium 10 أولًا. سيحلل هذا القسم المقاسات المكتوبة في عناوين المنتجات.';$('#sizeRows').innerHTML='';$('#sizeProducts').innerHTML='';return}
+ const type=$('#sizeType').value,metric=$('#sizeMetric').value;let pool=rows.filter(r=>type==='all'||(type==='bra'?isBra(r):(!isBra(r)&&isClothing(r))));
+ const groups={};pool.forEach(r=>{const sizes=sizeLabels(r);sizes.forEach(sz=>{(groups[sz]||(groups[sz]=[])).push(r)})});
+ const entries=Object.entries(groups).map(([size,rs])=>{const uniq=[...new Map(rs.map(r=>[r.ASIN||r.Title,r])).values()];const sales=uniq.reduce((a,r)=>a+(num(r['Monthly Sales'])||0),0),rev=uniq.reduce((a,r)=>a+(num(r['Monthly Revenue'])||0),0),prices=uniq.map(r=>num(r.Price)).filter(Number.isFinite),reviews=uniq.map(r=>num(r['Review Count'])).filter(Number.isFinite);return {size,rs:uniq,n:uniq.length,sales,rev,avgReviews:reviews.length?reviews.reduce((a,b)=>a+b,0)/reviews.length:NaN,avgPrice:prices.length?prices.reduce((a,b)=>a+b,0)/prices.length:NaN,score:sales/Math.max(1,uniq.length)}});
+ entries.sort((a,b)=>metric==='sales'?b.sales-a.sales:metric==='revenue'?b.rev-a.rev:metric==='reviews'?b.avgReviews-a.avgReviews:b.n-a.n);sizeEntries=entries;
+ const total=pool.length,withSize=pool.filter(r=>sizeLabels(r).length).length;$('#sizeKpis').innerHTML=[[pool.length,'منتجات ضمن النوع المحدد'],[withSize,'منتجات ظهر مقاسها في العنوان'],[Object.keys(groups).length,'مقاسات مختلفة'],[pool.filter(isBra).length,'منتجات مصنفة كصدريات']].map(x=>`<div class="sizekpi"><b>${fmt(x[0])}</b><span>${x[1]}</span></div>`).join('');
+ $('#sizeWarning').textContent='تنبيه مهم: بيانات Black Box عادةً لا تكشف المبيعات لكل مقاس على حدة. التحليل هنا يعتمد على المقاسات المكتوبة في عنوان كل إعلان؛ وقد يحتوي الإعلان على عدة مقاسات، لذلك لا تعتبر مجموع المبيعات المجمعة مبيعات مؤكدة للمقاس نفسه. عدد الإعلانات مؤشر تقريبي للمنافسة.';
+ if(!entries.length){$('#sizeRows').innerHTML='<tr><td colspan="7">لم أجد مقاسات واضحة في عناوين المنتجات ضمن هذا النوع. قد تحتاج إلى ملف يتضمن بيانات المقاسات أو اختلافات المنتج.</td></tr>';$('#sizeProducts').innerHTML='';$('#sizeSummary').innerHTML='';return}
+ const max=Math.max(1,...entries.map(e=>metric==='sales'?e.sales:metric==='revenue'?e.rev:metric==='reviews'?(Number.isFinite(e.avgReviews)?e.avgReviews:0):e.n));
+ $('#sizeRows').innerHTML=entries.map(e=>{const ratio=e.sales/Math.max(1,e.n);return `<tr><td><button type="button" class="sizepick" data-size-pick="${esc(e.size)}">${esc(e.size)} — عرض المنتجات</button></td><td>${e.n}</td><td><div class="sizebar"><i style="width:${e.n/Math.max(1,...entries.map(x=>x.n))*100}%"></i></div></td><td>${fmt(e.sales)}</td><td>${fmt(e.avgReviews)}</td><td>${fmt(e.avgPrice)} ${CUR.c}</td><td><button type="button" class="sizepick" data-size-pick="${esc(e.size)}">${fmt(ratio)} مبيعات/إعلان</button></td></tr>`}).join('');
+ const best=entries.slice().sort((a,b)=>b.score-a.score).slice(0,3);$('#sizeSummary').innerHTML='<div class="sizebox"><h3>مقاسات تستحق الفحص أولًا</h3><p>اضغط على أي مقاس لعرض المنتجات التي دخلت في حساب المؤشر.</p><div class="chips">'+best.map(e=>`<button type="button" class="sizepick" data-size-pick="${esc(e.size)}">${esc(e.size)} — ${fmt(e.score)} مبيعات/إعلان · عرض المنتجات</button>`).join('')+'</div></div>';
+ const selected=entries.slice().sort((a,b)=>b.score-a.score).slice(0,6);$('#sizeProducts').innerHTML=selected.map(e=>`<div class="sizebox"><b>المقاس ${esc(e.size)}</b><p class="sizelegend">${e.n} إعلانًا · مبيعات شهرية مجمعة ${fmt(e.sales)} · متوسط التقييمات ${fmt(e.avgReviews)}</p>${e.rs.slice().sort((a,b)=>(num(b['Monthly Sales'])||0)-(num(a['Monthly Sales'])||0)).slice(0,5).map(r=>`<div class="row"><span>${esc(r.Brand||'—')} · ${esc(r.ASIN||'')}</span><b>${esc(String(r.Title||'').slice(0,95))} — ${fmt(num(r['Monthly Sales']))} مبيعات</b></div>`).join('')}</div>`).join('');
+}
+function showSizeProducts(size){const e=sizeEntries.find(x=>x.size===size);if(!e)return;const sorted=e.rs.slice().sort((a,b)=>(num(b['Monthly Sales'])||0)-(num(a['Monthly Sales'])||0));$('#sizeProducts').innerHTML=`<div class="sizebox"><h3>المنتجات التي تذكر المقاس ${esc(size)}</h3><p class="sizelegend">${e.n} إعلانًا · مجموع المبيعات الشهرية للمنتجات ${fmt(e.sales)} · المؤشر ${fmt(e.score)} مبيعات/إعلان. هذه ليست مبيعات المقاس الفعلية.</p>${sorted.map(r=>`<div class="size-product">${r['Image URL']?`<img src="${esc(r['Image URL'])}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="size-product-img">لا توجد صورة</div>'}<div><div class="title">${esc(r.Title||'عنوان غير متوفر')}</div><div class="meta">العلامة: ${esc(r.Brand||'—')} · ASIN: ${esc(r.ASIN||'—')}<br>السعر: ${fmt(num(r.Price))} ${CUR.c} · المبيعات الشهرية: ${fmt(num(r['Monthly Sales']))} · التقييمات: ${fmt(num(r['Review Count']))}</div>${r.URL?`<a href="${esc(r.URL)}" target="_blank" rel="noopener">فتح المنتج في أمازون</a>`:''}</div></div>`).join('')}</div>`;$('#sizeProducts').scrollIntoView({behavior:'smooth',block:'start'});}
+$('#sizeRows').addEventListener('click',e=>{const b=e.target.closest('[data-size-pick]');if(b)showSizeProducts(b.dataset.sizePick)});$('#sizeSummary').addEventListener('click',e=>{const b=e.target.closest('[data-size-pick]');if(b)showSizeProducts(b.dataset.sizePick)});
+function recordTrackSnapshot(w,n,initial){
+ const now=new Date(),day=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+ const fields=[['price','السعر'],['title','العنوان'],['description','الوصف'],['img','رابط الصورة'],['url','رابط المنتج']];
+ const prev={price:w.price,title:w.title,description:w.description||'',img:w.img||'',url:w.url||''};
+ const changes=[];
+ if(!initial){for(const [k,label] of fields){const a=prev[k],b=n[k];if((a??'')!== (b??'')){changes.push({field:k,label,before:a??'',after:b??''})}}}
+ let daily=trackHistory.find(x=>x.asin===n.asin&&x.day===day&&x.type==='snapshot');
+ if(daily){daily.snapshot=n;daily.checkedAt=now.toISOString()}else trackHistory.push({type:'snapshot',asin:n.asin,title:n.title||w.title||'',day,checkedAt:now.toISOString(),snapshot:n});
+ if(changes.length){trackHistory.push({type:'change',asin:n.asin,title:n.title||w.title||'',day,checkedAt:now.toISOString(),changes});w.lastChanges=changes;w.lastChecked=now.toISOString()}
+ else {w.lastChecked=now.toISOString()}
+ w.history=w.history||[];if(!w.history.some(x=>x.day===day)){w.history.push({day,price:n.price,sales:n.sales,rev:n.rev,title:n.title,img:n.img,url:n.url,description:n.description||''});w.history=w.history.slice(-365)}
+}
+function renderTracker(){
+ const list=Object.values(watch);const changes=trackHistory.filter(x=>x.type==='change').sort((a,b)=>b.checkedAt.localeCompare(a.checkedAt));
+ const today=new Date().toISOString().slice(0,10),todayChanges=changes.filter(x=>x.day===today);
+ $('#trackSummary').innerHTML=[['منتجات تحت التتبع',list.length],['تغييرات اليوم',todayChanges.length],['إجمالي سجلات التغيير',changes.length],['آخر فحص',list.filter(w=>w.lastChecked).length]].map(x=>`<div class="sizekpi"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+ const latest=changes.filter(x=>Date.now()-new Date(x.checkedAt).getTime()<7*86400000);
+ $('#trackStartupAlert').innerHTML=latest.length?`<div class="sizehint"><b>تنبيه التغييرات المسجلة مؤخرًا:</b> تم تسجيل ${latest.length} حدث تغيير خلال آخر 7 أيام. افتح السجل أدناه لمراجعة التفاصيل.</div>`:'<div class="sizelegend">لا توجد تغييرات مسجلة خلال آخر 7 أيام. هذا لا يعني أن صفحات Amazon لم تتغير؛ يلزم إدخال ملف بيانات حديث للمقارنة.</div>';
+ $('#trackStatus').textContent=loaded?`البيانات المحمّلة حاليًا: ${rows.length} منتج. تمت مقارنة المنتجات الموجودة في المفضلة عند رفع الملف.`:'لم يتم تحميل ملف بيانات في هذه الجلسة. اذهب إلى صفحة المنتجات وارفع ملفًا حديثًا من Helium 10، ثم ارجع إلى هنا.';
+ $('#trackList').innerHTML=changes.length?changes.slice(0,250).map(x=>`<div class="manageCard"><div class="wi">${x.changes.some(c=>c.field==='price')?'السعر':'تغيير'}</div><div><b>${esc(x.title||'منتج')} — ${esc(x.asin)}</b><div class="meta">التاريخ: ${esc(x.day)} · ${esc(new Date(x.checkedAt).toLocaleTimeString())}</div>${x.changes.map(c=>`<div style="padding:7px 0;border-bottom:1px solid var(--line)"><b>${esc(c.label)}:</b><div class="sizelegend">السابق: ${esc(String(c.before??'').slice(0,350)||'—')}</div><div class="sizelegend">الجديد: ${esc(String(c.after??'').slice(0,350)||'—')}</div></div>`).join('')}<div class="wa">${watch[x.asin]?.url?`<a class="btn ghost" href="${esc(watch[x.asin].url)}" target="_blank" rel="noopener">فتح المنتج</a>`:''}</div></div></div>`).join(''):'<div class="empty">لا توجد تغييرات مكتشفة بعد. أضف المنتجات إلى المفضلة ثم ارفع ملفًا أحدث للمقارنة.</div>';
+}
+function showTab(t){const w=t==='W',z=t==='S',b=t==='B',c=t==='C',i=t==='I',sh=t==='T',tr=t==='R',k=t==='K',o=t==='O';const main=!w&&!z&&!b&&!c&&!i&&!sh&&!tr&&!k&&!o;[['nP',main],['nW',w],['nS',z],['nB',b],['nC',c],['nI',i],['nT',sh],['nR',tr],['nK',k],['nO',o]].forEach(([id,on])=>$('#'+id).setAttribute('aria-pressed',on));$('#wl').style.display=w?'block':'none';$('#sizePage').style.display=z?'block':'none';$('#brandPage').style.display=b?'block':'none';$('#calcPage').style.display=c?'block':'none';$('#inventoryPage').style.display=i?'block':'none';$('#shippingPage').style.display=sh?'block':'none';$('#trackingPage').style.display=tr?'block':'none';$('#cmpPage').style.display=k?'block':'none';$('#oppPage').style.display=o?'block':'none';$('#drop').style.display=main&&!loaded?'block':'none';$('#app').style.display=main&&loaded?'block':'none';if(w)renderW();if(z)renderSizes();if(b)renderBrands();if(c){refreshCalcProducts();if(!$('#calcResults').innerHTML)calculateProfit()};if(i)renderInventory();if(sh)renderShipping();if(tr){renderTracker();renderHistoryProductOptions()}if(k)renderCmp();if(o)renderOpp()}
+function sortSavedProducts(list, control){const [key,dir]=(control||'added:d').split(':');const fields={added:'added',growth:'salesTrend',yoy:'yoy',price:'price',sales:'sales',revenue:'rev',score:'sc',bsr:'bsr',rating:'rating',reviews:'reviews'};const field=fields[key]||'added';return list.sort((a,b)=>{let x=Number(a[field]),y=Number(b[field]);if(!Number.isFinite(x))x=key==='added'?0:NaN;if(!Number.isFinite(y))y=key==='added'?0:NaN;if(Number.isNaN(x)&&Number.isNaN(y))return 0;if(Number.isNaN(x))return 1;if(Number.isNaN(y))return -1;return (dir==='a'?1:-1)*(x-y)});}
+function wText(w){return [w.title,w.category,w.subcategory,w.description].filter(Boolean).join(' ')}
+function wGroup(w){const t=wText(w).toLowerCase();if(/towel|dish.?cloth|kitchen.?cloth|microfiber|gsm|منشفة|مناشف|فوطة/.test(t))return 'textile';if(/bra|bralette|lingerie|clothing|apparel|dress|shirt|legging|pants|jeans|skirt|swimwear|shapewear|ملابس|فستان|قميص|بنطال|لانجري|صدرية|حمالة/.test(t))return 'clothing';if(/storage|container|organizer|box|bag|vacuum|حافظة|علبة|منظم|تخزين|أكياس/.test(t))return 'storage';if(/kitchen|cookware|utensil|مطبخ|طبخ/.test(t))return 'kitchen';return 'general'}
+function wAttr(w,key){const t=wText(w),u=t.toUpperCase();let m;
+ if(key==='size'){if(wGroup(w)==='clothing'){const found=sizeLabels({Title:w.title||''});if(found.length)return found.join(', ')}m=u.match(/\b(XXS|XS|S|M|L|XL|XXL|XXXL|[0-9]{1,3}\s?(?:CM|MM|INCH|INCHES|IN))\b/);return m?m[0].replace(/\s+/g,' ').trim():''}
+ if(key==='color'){const colors=['black','white','beige','brown','blue','navy','red','pink','purple','green','grey','gray','yellow','orange','transparent','multicolor','أسود','أبيض','بيج','بني','أزرق','أحمر','وردي','أخضر'];const hit=colors.find(c=>new RegExp('(^|[^a-z])'+c+'([^a-z]|$)','i').test(t));return hit?hit.toLowerCase():''}
+ if(key==='material'){const vals=['stainless steel','silicone','cotton','polyester','nylon','plastic','bamboo','microfiber','velvet','leather','glass','wood','ceramic','cotton blend','قطن','بوليستر','سيليكون','ستانلس ستيل','بلاستيك'];return vals.find(v=>t.toLowerCase().includes(v))||''}
+ if(key==='gsm'){m=u.match(/\b(\d{2,4})\s*GSM\b/);return m?m[1]+' GSM':''}
+ if(key==='dimensions'){m=u.match(/\b\d+(?:\.\d+)?\s*[x×*]\s*\d+(?:\.\d+)?(?:\s*[x×*]\s*\d+(?:\.\d+)?)?\s*(?:CM|MM|IN|INCH(?:ES)?)?\b/);return m?m[0].replace(/\s+/g,' ').trim():''}
+ if(key==='pack'){m=t.match(/\b(\d{1,3})\s*(?:pack|pcs|pieces|count|sets?|compartments?)\b/i)||t.match(/\b(\d{1,3})\s*(?:قطعة|قطع|حبة)\b/);return m?m[1]+' قطع':''}
+ if(key==='style'){const vals=['wireless','push up','full coverage','sports','seamless','high waisted','plus size','leakproof','foldable','reusable','wire-free','لاسلكي','رياضي'];return vals.find(v=>t.toLowerCase().includes(v))||''}
+ return ''}
+function wFilterConfig(){const c=$('#wcatfilter')?.value||'',all=Object.values(watch),base=all.filter(w=>!c||String(w.category||'غير محددة')===c),g=base.length?wGroup(base[0]):'general';let keys=g==='clothing'?[['size','المقاس'],['color','اللون'],['material','المادة'],['style','النوع/التصميم']]:g==='textile'?[['gsm','الكثافة GSM'],['material','المادة'],['dimensions','الأبعاد'],['pack','عدد القطع']]:g==='storage'?[['dimensions','الأبعاد/السعة'],['material','المادة'],['pack','عدد القطع'],['color','اللون']]:g==='kitchen'?[['material','المادة'],['pack','عدد القطع'],['dimensions','الأبعاد'],['color','اللون']]:[['material','المادة'],['size','المقاس/الحجم'],['color','اللون'],['pack','عدد القطع']];
+ [['#wattr1',0],['#wattr2',1],['#wattr3',2]].forEach(([id,i])=>{const sel=$(id),prev=sel.value,k=keys[i];sel.dataset.attr=k[0];const vals=[...new Set(base.map(w=>wAttr(w,k[0])).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'}));sel.innerHTML=`<option value="">كل ${k[1]}</option>`+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');if(vals.includes(prev))sel.value=prev});$('#wFilterHint').textContent='خصائص الفئة المحددة: '+keys.map(k=>k[1]).join('، ')+'. تعتمد النتائج على الكلمات والمعلومات المتوفرة في عنوان المنتج ووصفه.'}
+function initWCategoryFilters(){const sel=$('#wcatfilter');if(!sel)return;const prev=sel.value,cats=[...new Set(Object.values(watch).map(w=>String(w.category||'غير محددة').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));sel.innerHTML='<option value="">كل الفئات</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');if(cats.includes(prev))sel.value=prev;wFilterConfig()}
+function clearWCategoryFilters(){['#wcatfilter','#wattr1','#wattr2','#wattr3','#wminprice','#wmaxprice'].forEach(id=>$(id).value='');initWCategoryFilters();renderW()}
+function renderW(){
+  initWCategoryFilters();let l=sortSavedProducts(Object.values(watch),$('#wsort')?.value||'added:d');const fs=$('#wst').value;if(fs)l=l.filter(w=>w.status===fs);const cat=$('#wcatfilter').value;if(cat)l=l.filter(w=>String(w.category||'غير محددة')===cat);for(const id of ['#wattr1','#wattr2','#wattr3']){const v=$(id).value,k=$(id).dataset.attr;if(v&&k)l=l.filter(w=>wAttr(w,k)===v)}const min=Number($('#wminprice').value),max=Number($('#wmaxprice').value);if($('#wminprice').value!=='')l=l.filter(w=>Number.isFinite(Number(w.price))&&Number(w.price)>=min);if($('#wmaxprice').value!=='')l=l.filter(w=>Number.isFinite(Number(w.price))&&Number(w.price)<=max);
+  $('#wwarn').innerHTML=canSave?'':'<div class="warn">المتصفح لا يسمح بالحفظ التلقائي هنا. استخدم زر النسخة الاحتياطية حتى لا تفقد قائمتك.</div>';
+  $('#wcount').textContent=Object.keys(watch).length+' منتج في المراقبة';syncStars();
+  $('#wlist').innerHTML=l.length?l.map(w=>{const t=tier(w.sc||0),a=esc(w.asin);return `<div class="wc"><div class="wi">${w.img?`<img src="${esc(w.img)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<i>لا صورة</i>'">`:'<i>لا صورة</i>'}</div><div class="wm"><div class="br">${esc(w.brand)} — ${a}</div><div class="ti" style="min-height:0">${esc(w.title)}</div><div class="chips"><span class="tr ${t[1]}">${t[3]} ${t[2]} ${w.sc}</span><span class="chip">${val('Price',w.price)}</span><span class="chip g">إيراد ${fmt(num(w.rev))}</span><span class="chip">مبيعات ${fmt(num(w.sales))}</span>${typeof w.prevPrice==='number'?`<span class="chip">السعر السابق ${fmt(w.prevPrice)}</span>`:''}</div><div class="wf"><label>الحالة<select data-f="status" data-k="${a}">${STAT.map(s=>`<option${s===w.status?' selected':''}>${s}</option>`).join('')}</select></label><label>سعر الشراء المستهدف<input type="number" inputmode="decimal" data-f="target" data-k="${a}" value="${esc(w.target)}"></label><label>تنبيه عند سعر أقل من<input type="number" min="0" step="0.01" data-f="priceAlert" data-k="${a}" value="${esc(w.priceAlert??'')}" placeholder="اختياري"></label><label>اسم المورد<input data-f="supplierName" data-k="${a}" value="${esc(w.supplierName||'')}" placeholder="Supplier name"></label><label>رابط المورد<input data-f="supplierUrl" data-k="${a}" value="${esc(w.supplierUrl||'')}" placeholder="https://..."></label><label>MOQ / الحد الأدنى للطلب<input type="number" min="0" data-f="moq" data-k="${a}" value="${esc(w.moq??'')}" placeholder="Units"></label></div><textarea data-f="note" data-k="${a}" placeholder="ملاحظاتك: المورد، تكلفة العينة، مدة التصنيع، شروط الدفع...">${esc(w.note)}</textarea><div class="sizelegend">${Number.isFinite(Number(w.priceAlert))&&w.priceAlert!==''?(Number(w.price)<=Number(w.priceAlert)?'تنبيه: السعر الحالي وصل إلى حدك المستهدف أو أقل.':'سيتنبهك البرنامج عند تسجيل سعر '+moneyFmt(Number(w.priceAlert))+' أو أقل.'):'أضف حدًا سعريًا لتنبيهك عند مقارنة ملف بيانات جديد.'}</div><div class="wa">${w.url?`<a class="btn ghost" href="${esc(w.url)}" target="_blank" rel="noopener">فتح في أمازون</a>`:''}<button class="btn ghost" data-del="${a}">حذف</button></div></div></div>`}).join(''):'<div class="empty">لا توجد منتجات هنا بعد. اضغط ★ على أي منتج لإضافته إلى المراقبة.</div>';
+}
+
+function renderBrands(){
+ const brands=[...new Set(rows.map(r=>String(r.Brand??'').trim()).filter(v=>v&&v.toUpperCase()!=='N/A'&&v!=='-'))].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'}));
+ $('#brandKpis').innerHTML=`<div class="sizekpi"><b>${fmt(brands.length)}</b><span>عدد العلامات التجارية الفريدة</span></div><div class="sizekpi"><b>${fmt(rows.length)}</b><span>إجمالي المنتجات في الملف</span></div>`;
+ $('#brandOutput').value=brands.join(', ');
+ $('#brandNote').textContent=loaded?`تم استخراج ${brands.length} علامة تجارية فريدة من عمود Brand. قد تختلف كتابة العلامة نفسها بين المنتجات، لذلك تُزال التكرارات المتطابقة فقط.`:'ارفع ملف Helium 10 أولاً لعرض العلامات التجارية.';
+}
+
+// Smart calculator, inventory and shipment workflow. Data is stored locally in each saved product.
+const moneyFmt=n=>Number.isFinite(Number(n))?Number(n).toLocaleString('en-US',{maximumFractionDigits:2}):'—';
+const MARKET_INFO={USA:{currency:'USD',symbol:'$',usdRate:1},UAE:{currency:'AED',symbol:'د.إ',rateId:'rateAED'},SA:{currency:'SAR',symbol:'ر.س',rateId:'rateSAR'},CA:{currency:'CAD',symbol:'C$',rateId:'rateCAD'}};
+function marketInfo(code=$('#calcMarket')?.value||'USA'){const m=MARKET_INFO[code]||MARKET_INFO.USA;if(m.usdRate)return {...m,perUSD:1};const rate=Number($('#'+m.rateId)?.value)||({UAE:3.6725,SA:3.75,CA:1.38}[code]);return {...m,perUSD:rate};}
+function currencyLabel(code){return (MARKET_INFO[code]||MARKET_INFO.USA).currency;}
+function marketCurrency(){return currencyLabel($('#calcMarket')?.value||'USA');}
+function refreshCalcProducts(){const sel=$('#calcProduct'),old=sel.value;sel.innerHTML='<option value="">اختر منتجًا من البطاقات أدناه</option>'+Object.values(watch).map(w=>`<option value="${esc(w.asin)}">${esc((w.title||w.asin||'منتج').slice(0,90))} — ${esc(w.asin||'')}</option>`).join('');if(watch[old])sel.value=old;renderCalcProductCards();}
+function renderCalcProductCards(){const root=$('#calcProductCards');if(!root)return;const q=($('#calcProductSearch')?.value||'').trim().toLowerCase(),selected=$('#calcProduct').value;const list=sortSavedProducts(Object.values(watch).filter(w=>[w.title,w.asin,w.brand].some(v=>String(v||'').toLowerCase().includes(q))),$('#calcProductSort')?.value||'sales:d');root.innerHTML=list.length?list.map(w=>`<div class="calcProductCard ${w.asin===selected?'selected':''}" data-calc-pick="${esc(w.asin)}" tabindex="0" role="button" aria-label="اختيار ${esc(w.title||w.asin)}"><div class="cpimg">${w.img?`<img src="${esc(w.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=&quot;sizelegend&quot;>لا توجد صورة</span>'">`:'<span class="sizelegend">لا توجد صورة</span>'}</div><div class="cpbody"><div class="cptitle">${esc(w.title||'عنوان غير متوفر')}</div><div class="cpbrand">${esc(w.brand||'علامة غير محددة')} · ASIN: ${esc(w.asin||'—')}</div><div class="cpstats"><div class="cpstat"><span>السعر الحالي</span><b>${moneyFmt(w.price)} ${currencyLabel($('#calcMarket').value)}</b></div><div class="cpstat"><span>المبيعات الشهرية</span><b>${moneyFmt(w.sales)}</b></div><div class="cpstat"><span>الإيراد الشهري</span><b>${moneyFmt(w.rev)}</b></div><div class="cpstat"><span>عدد التقييمات</span><b>${moneyFmt(w.reviews)}</b></div><div class="cpstat"><span>متوسط التقييم</span><b>${w.rating?moneyFmt(w.rating):'—'}</b></div><div class="cpstat"><span>درجة الفرصة</span><b>${moneyFmt(w.sc)}</b></div></div><button class="cpchoose" type="button">${w.asin===selected?'تم اختيار هذا المنتج':'اختيار المنتج وحساب الربح'}</button></div></div>`).join(''):'<div class="calcProductEmpty">لا توجد منتجات مطابقة. أضف منتجات إلى المفضلة من صفحة المنتجات أولًا.</div>';}
+function chooseCalcProduct(asin){if(!watch[asin])return;$('#calcProduct').value=asin;renderCalcProductCards();loadCalcProduct();toast('تم اختيار المنتج وتحميل بياناته في الحاسبة');}
+function loadCalcProduct(){const w=watch[$('#calcProduct').value];if(!w)return;const set=(id,v)=>{if(v!==undefined&&v!==null&&v!==''&&Number.isFinite(Number(v)))$(id).value=v};set('#cSale',w.calc?.sale||w.price);set('#cBuy',w.calc?.buy||w.target);set('#cShip',w.calc?.ship);set('#cReferral',w.calc?.referral??15);set('#cFba',w.calc?.fba);set('#cOther',w.calc?.other);set('#cAds',w.calc?.ads??10);set('#cReturns',w.calc?.returns??3);set('#cTarget',w.calc?.targetProfit??8);set('#cMarginGoal',w.calc?.targetMargin??25);set('#cRoiGoal',w.calc?.targetROI??50);set('#cQty',w.purchaseQty||w.calc?.qty||100);syncCalcBudget();calculateProfit();updateUsdHints()}
+function calcInputs(){const n=id=>Math.max(0,Number($(id).value)||0);return {sale:n('#cSale'),buy:n('#cBuy'),ship:n('#cShip'),referral:n('#cReferral')/100,fba:n('#cFba'),other:n('#cOther'),ads:n('#cAds')/100,returns:n('#cReturns')/100,target:n('#cTarget'),targetMargin:Math.min(99.9,n('#cMarginGoal')),targetROI:n('#cRoiGoal'),qty:Math.max(1,Math.floor(n('#cQty'))),budget:n('#cBudget'),market:$('#calcMarket').value}}
+function calculateProfit(){const x=calcInputs(),percentFees=x.referral+x.ads+x.returns,netRate=1-percentFees,fixed=x.ship+x.fba+x.other,profit=x.sale*netRate-x.buy-fixed,breakEven=netRate>0?(x.buy+fixed)/netRate:Infinity,maxBuyProfit=x.sale*netRate-fixed-x.target,maxBuyMargin=x.sale*(netRate-x.targetMargin/100)-fixed;const roiRate=x.targetROI/100;const maxBuyROI=roiRate>=0?(x.sale*netRate-fixed*(1+roiRate))/(1+roiRate):-Infinity;const recommendedBuy=Math.min(maxBuyProfit,maxBuyMargin,maxBuyROI);const investment=x.buy+x.ship+x.fba+x.other,roi=investment>0?profit/investment*100:0,totalCost=(x.buy+x.ship+x.fba+x.other)*x.qty,affordable=investment>0?Math.floor(x.budget/investment):0,cur=currencyLabel(x.market),margin=x.sale?profit/x.sale*100:0;let decision='تحتاج مراجعة';if(profit>0&&margin>=x.targetMargin&&roi>=x.targetROI)decision='تحقق الأهداف المدخلة مبدئيًا';else if(profit>0)decision='الربح موجب لكن لم تتحقق كل الأهداف';else decision='غير مربح بهذه المدخلات';const metrics=[['Net Profit per Unit',profit,profit>=0?'good':'bad'],['Actual Profit Margin',margin,margin>=x.targetMargin?'good':'bad'],['Break-even Selling Price',breakEven,''],['Max Buy Cost — Target Profit',maxBuyProfit,maxBuyProfit>=0?'good':'bad'],['Max Buy Cost — Target Margin',maxBuyMargin,maxBuyMargin>=0?'good':'bad'],['Max Buy Cost — Target ROI',maxBuyROI,maxBuyROI>=0?'good':'bad'],['Recommended Maximum Purchase Price',recommendedBuy,recommendedBuy>=0?'good':'bad'],['Actual ROI',roi,roi>=x.targetROI?'good':'bad'],['Total Cost for Quantity',totalCost,totalCost<=x.budget?'good':'bad'],['Budget Remaining',x.budget-totalCost,x.budget>=totalCost?'good':'bad'],['Affordable Quantity',affordable,affordable>=x.qty?'good':'bad']];$('#calcResults').innerHTML=`<div class="calcMetric ${profit>0&&margin>=x.targetMargin&&roi>=x.targetROI?'good':profit<=0?'bad':''}" style="grid-column:1/-1"><span>Initial Decision</span><b>${decision}</b><span>Targets: margin ${x.targetMargin.toFixed(1)}% · ROI ${x.targetROI.toFixed(1)}% · target profit ${moneyFmt(x.target)} ${cur}</span></div>`+metrics.map(([label,val,cls],i)=>`<div class="calcMetric ${cls}"><span>${label}</span><b>${Number.isFinite(val)?(i===1||i===7?moneyFmt(val)+'%':i===10?moneyFmt(val)+' units':moneyFmt(val)+' '+cur):'Not available'}</b></div>`).join('')+`<div class="sizehint" style="grid-column:1/-1"><b>Purchase price recommendation:</b> ${recommendedBuy>=0?moneyFmt(recommendedBuy)+' '+cur+' maximum per unit to meet all three targets.': 'No feasible purchase price meets all targets at this selling price; reduce costs, lower targets, or increase selling price.'}<br>Break-even selling price includes purchase, shipping, FBA, and other unit costs divided by the amount left after percentage fees. ROI is calculated against purchase + shipping + FBA + other costs. <br>Unit costs: buy ${moneyFmt(x.buy)} + shipping ${moneyFmt(x.ship)} + FBA ${moneyFmt(x.fba)} + other ${moneyFmt(x.other)} ${cur}. Percentage fees: referral ${(x.referral*100).toFixed(1)}% + ads ${(x.ads*100).toFixed(1)}% + returns ${(x.returns*100).toFixed(1)}%.</div>`;return {x,profit,margin,roi,breakEven,recommendedBuy}}
+function saveCalc(){const a=$('#calcProduct').value;if(!a||!watch[a]){toast('اختر منتجًا من المفضلة أولًا');return}const x=calcInputs();watch[a].calc={sale:x.sale,buy:x.buy,ship:x.ship,referral:x.referral*100,fba:x.fba,other:x.other,ads:x.ads*100,returns:x.returns*100,targetProfit:x.target,targetMargin:x.targetMargin,targetROI:x.targetROI,qty:x.qty,budget:x.budget,market:x.market,updated:Date.now()};watch[a].target=x.buy;save();renderW();toast('تم حفظ الحساب مع المنتج')}
+function saveCalcToInventory(){const a=$('#calcProduct').value;if(!a||!watch[a]){toast('اختر منتجًا من المفضلة أولًا');return}saveCalc();const w=watch[a],x=calcInputs();w.purchaseQty=x.qty;w.soldQty=Number(w.soldQty)||0;w.calc=w.calc||{};w.calc.buy=x.buy;w.calc.inventoryAddedAt=new Date().toISOString();w.inventoryStatus=w.inventoryStatus||'قيد المعالجة';w.inventoryHistory=w.inventoryHistory||[];w.inventoryHistory.push({date:new Date().toISOString(),status:w.inventoryStatus,qty:x.qty,buyCost:x.buy,action:'إضافة من حاسبة الأرباح'});save();renderInventory();showTab('I');toast('تم حفظ الحساب وإضافة الكمية إلى المخزون بحالة قيد المعالجة')}
+function renderInventory(){
+ const list=Object.values(watch).filter(w=>Number(w.purchaseQty)>0||w.inventoryStatus||w.calc?.inventoryAddedAt);
+ const totalBought=list.reduce((s,w)=>s+(Number(w.purchaseQty)||0),0),totalSold=list.reduce((s,w)=>s+(Number(w.soldQty)||0),0),totalLeft=list.reduce((s,w)=>s+Math.max(0,(Number(w.purchaseQty)||0)-(Number(w.soldQty)||0)),0),spent=list.reduce((s,w)=>s+(Number(w.purchaseQty)||0)*(Number(w.calc?.buy)||Number(w.target)||0),0);
+ $('#inventorySummary').innerHTML=[['منتجات في المخزون',list.length],['إجمالي القطع المشتراة',totalBought],['إجمالي القطع المباعة',totalSold],['الرصيد المتبقي',totalLeft],['تكلفة الشراء المسجلة',moneyFmt(spent)]].map(a=>`<div class="sizekpi"><b>${a[1]}</b><span>${a[0]}</span></div>`).join('');
+ const stages=['قيد المعالجة','تم الطلب من المورد','قيد التصنيع أو التجهيز','جاهز للشحن','قيد الشحن الدولي','وصل إلى الجمارك','وصل إلى وكيل الشحن','تم الإرسال إلى Amazon','استلمته Amazon','متوفر للبيع','نفد المخزون','ملغي'];
+ $('#inventoryList').innerHTML=list.length?list.map(w=>{const bought=Number(w.purchaseQty)||0,sold=Number(w.soldQty)||0,left=Math.max(0,bought-sold),cost=Number(w.calc?.buy)||Number(w.target)||0,status=w.inventoryStatus||'قيد المعالجة';return `<div class="manageCard inventoryCard">${w.img?`<img src="${esc(w.img)}" alt="" onerror="this.style.visibility='hidden'">`:'<div class="wi">لا صورة</div>'}<div class="inventoryDetails"><b>${esc(w.title||'منتج')}</b><div class="meta">ASIN: ${esc(w.asin||'—')} · سعر البيع المرصود: ${moneyFmt(w.price)}</div><div style="margin:9px 0"><label>حالة المنتج والمشتريات<select data-inv="inventoryStatus" data-k="${esc(w.asin)}">${stages.map(s=>`<option value="${esc(s)}"${status===s?' selected':''}>${esc(s)}</option>`).join('')}</select></label></div><div class="mfields"><label>الكمية المشتراة<input type="number" min="0" step="1" data-inv="purchaseQty" data-k="${esc(w.asin)}" value="${bought}"></label><label>الكمية المباعة<input type="number" min="0" step="1" data-inv="soldQty" data-k="${esc(w.asin)}" value="${sold}"></label><label>الرصيد المتبقي<input readonly value="${left}"></label><label>تكلفة شراء الوحدة<input type="number" min="0" step="0.01" data-inv="buyCost" data-k="${esc(w.asin)}" value="${cost}"></label></div><p class="sizelegend">قيمة المخزون المتبقي: ${moneyFmt(left*cost)} · آخر تحديث: ${w.inventoryUpdatedAt?new Date(w.inventoryUpdatedAt).toLocaleDateString():'—'}</p><div class="extraActions"><button class="btn ghost" type="button" data-inv-edit="${esc(w.asin)}">تعديل البيانات</button><button class="btn danger" type="button" data-inv-delete="${esc(w.asin)}">حذف من المخزون</button></div></div></div>`}).join(''):'<div class="empty">لا توجد مشتريات مسجلة بعد. اختر منتجًا في حاسبة الأرباح ثم اضغط Save + Add to Inventory.</div>';
+}
+function renderShipping(){const list=Object.values(watch);const stages=['لم يُطلب بعد','تم طلب المنتج من المورد','قيد التصنيع أو التجهيز','جاهز للشحن','غادر الصين','قيد النقل الدولي','وصل إلى الجمارك','وصل إلى مستودع/وكيل الشحن','تم إرساله إلى Amazon','استلمته Amazon'];$('#shippingList').innerHTML=list.length?list.map(w=>{const t=w.shipment||{};return `<div class="manageCard">${w.img?`<img src="${esc(w.img)}" alt="" onerror="this.style.visibility='hidden'">`:'<div class="wi">لا صورة</div>'}<div><b>${esc(w.title||'منتج')}</b><div class="meta">ASIN: ${esc(w.asin||'—')}</div><div class="shipfields"><label>مرحلة الشحنة<select data-ship="stage" data-k="${esc(w.asin)}">${stages.map(s=>`<option${(t.stage||stages[0])===s?' selected':''}>${s}</option>`).join('')}</select></label><label>اسم المورد<input data-ship="supplier" data-k="${esc(w.asin)}" value="${esc(t.supplier||'')}" placeholder="اسم المورد"></label><label>شركة الشحن<input data-ship="carrier" data-k="${esc(w.asin)}" value="${esc(t.carrier||'')}" placeholder="شركة الشحن"></label><label>رقم التتبع<input data-ship="tracking" data-k="${esc(w.asin)}" value="${esc(t.tracking||'')}" placeholder="Tracking number"></label><label>تاريخ الإرسال<input type="date" data-ship="sent" data-k="${esc(w.asin)}" value="${esc(t.sent||'')}"></label><label>الوصول المتوقع<input type="date" data-ship="eta" data-k="${esc(w.asin)}" value="${esc(t.eta||'')}"></label><label>رقم شحنة Amazon<input data-ship="amazonShipment" data-k="${esc(w.asin)}" value="${esc(t.amazonShipment||'')}" placeholder="Shipment ID"></label></div><p><span class="shipStage">${esc(t.stage||stages[0])}</span></p></div></div>`}).join(''):'<div class="empty">أضف منتجات إلى المفضلة لتسجيل شحناتها.</div>'}
+function updateUsdHints(){const m=marketInfo();document.querySelectorAll('[data-usd-for]').forEach(el=>{const input=$('#'+el.dataset.usdFor);const value=Number(input.value);if(!input.value.trim()||!Number.isFinite(value)){el.textContent='';return}const usd=value/(m.perUSD||1);el.textContent='≈ $'+usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' USD';});document.querySelectorAll('[data-currency-label]').forEach(el=>el.textContent=m.currency);}
+$('#calcProduct').addEventListener('change',()=>{loadCalcProduct();renderCalcProductCards()});$('#calcProductCards').addEventListener('click',e=>{const card=e.target.closest('[data-calc-pick]');if(card)chooseCalcProduct(card.dataset.calcPick)});$('#calcProductCards').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-calc-pick]')){e.preventDefault();chooseCalcProduct(e.target.dataset.calcPick)}});$('#calcProductSearch').addEventListener('input',renderCalcProductCards);$('#calcMarket').addEventListener('change',()=>{syncCalcBudget();renderCalcProductCards();calculateProfit();updateUsdHints()});['#cSale','#cBuy','#cShip','#cReferral','#cFba','#cOther','#cAds','#cReturns','#cTarget','#cMarginGoal','#cRoiGoal','#cQty','#cBudget','#calcMarket'].forEach(id=>{ $(id).addEventListener('input',()=>{calculateProfit();updateUsdHints()}); $(id).addEventListener('change',()=>{calculateProfit();updateUsdHints()}); });updateUsdHints();['#rateAED','#rateSAR','#rateCAD'].forEach(id=>$(id).addEventListener('input',()=>{updateUsdHints();calculateProfit()}));$('#calcRun').onclick=calculateProfit;$('#calcSave').onclick=saveCalc;$('#calcSaveInventory').onclick=saveCalcToInventory;
+$('#inventoryList').addEventListener('change',e=>{const f=e.target.dataset.inv;if(!f)return;const w=watch[e.target.dataset.k];if(!w)return;const n=Math.max(0,Number(e.target.value)||0);if(f==='buyCost'){w.calc=w.calc||{};w.calc.buy=n;w.target=n}else if(f==='inventoryStatus'){w.inventoryStatus=e.target.value;w.inventoryUpdatedAt=new Date().toISOString();w.inventoryHistory=w.inventoryHistory||[];w.inventoryHistory.push({date:w.inventoryUpdatedAt,status:w.inventoryStatus,qty:Number(w.purchaseQty)||0,action:'تغيير حالة المخزون'})}else w[f]=Math.floor(n);w.inventoryUpdatedAt=new Date().toISOString();save();renderInventory()});
+$('#inventoryList').addEventListener('click',e=>{const del=e.target.closest('[data-inv-delete]');if(del){const w=watch[del.dataset.invDelete];if(!w)return;if(confirm('حذف سجل الشراء والمخزون لهذا المنتج؟ سيبقى المنتج في المفضلة.')){w.purchaseQty=0;w.soldQty=0;delete w.inventoryStatus;delete w.inventoryUpdatedAt;delete w.inventoryHistory;if(w.calc)delete w.calc.inventoryAddedAt;save();renderInventory();toast('تم حذف سجل المخزون مع إبقاء المنتج في المفضلة')}return}const edit=e.target.closest('[data-inv-edit]');if(edit){const w=watch[edit.dataset.invEdit];if(!w)return;const title=prompt('تعديل عنوان المنتج:',w.title||'');if(title!==null&&title.trim())w.title=title.trim();const cost=prompt('تعديل تكلفة شراء الوحدة:',String(Number(w.calc?.buy)||Number(w.target)||0));if(cost!==null&&cost.trim()!==''&&Number.isFinite(Number(cost))&&Number(cost)>=0){w.calc=w.calc||{};w.calc.buy=Number(cost);w.target=Number(cost)}w.inventoryUpdatedAt=new Date().toISOString();save();renderInventory();toast('تم تحديث بيانات المنتج')}});
+$('#shippingList').addEventListener('change',e=>{const f=e.target.dataset.ship;if(!f)return;const w=watch[e.target.dataset.k];if(!w)return;w.shipment=w.shipment||{};w.shipment[f]=e.target.value;save();if(f==='stage')renderShipping()});
+$('#nC').onclick=()=>showTab('C');$('#nI').onclick=()=>showTab('I');$('#nT').onclick=()=>showTab('T');$('#nR').onclick=()=>showTab('R');
+$('#trackRefresh').onclick=()=>{if(!loaded){toast('ارفع ملف بيانات حديثًا أولًا من صفحة المنتجات');renderTracker();return}let count=0;rows.forEach(r=>{const w=watch[r.ASIN];if(!w)return;count++;recordTrackSnapshot(w,snap(r),false)});save();saveHistory();renderTracker();renderHistoryProductOptions();checkPriceAlerts();toast(`تم فحص ${count} منتجًا من البيانات المحمّلة`)};
+$('#trackExport').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({exportedAt:new Date().toISOString(),watch,history:trackHistory},null,2)],{type:'application/json'}));a.download='blackbox_price_change_history.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('#trackClear').onclick=()=>{if(confirm('هل تريد مسح سجل تغييرات السعر والصفحة؟ لا يمكن التراجع عن ذلك.')){trackHistory=[];saveHistory();renderTracker();toast('تم مسح السجل')}};
+
+$('#nB').onclick=()=>showTab('B');
+$('#brandRefresh').onclick=renderBrands;
+$('#brandCopy').onclick=async()=>{const v=$('#brandOutput').value;if(!v){toast('لا توجد علامات تجارية للنسخ');return}try{await navigator.clipboard.writeText(v);toast('تم نسخ '+v.split(', ').length+' علامة تجارية')}catch(e){$('#brandOutput').focus();$('#brandOutput').select();try{document.execCommand('copy');toast('تم نسخ قائمة العلامات')}catch(_){toast('تعذّر النسخ؛ حدد النص وانسخه يدويًا')}}};
+$('#brandDownload').onclick=()=>{const v=$('#brandOutput').value;if(!v){toast('لا توجد علامات تجارية للتنزيل');return}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([v],{type:'text/plain;charset=utf-8'}));a.download='amazon_brands.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+
+$('#nP').onclick=()=>showTab('P');$('#nW').onclick=()=>showTab('W');$('#nS').onclick=()=>showTab('S');$('#sizeType').onchange=renderSizes;$('#sizeMetric').onchange=renderSizes;$('#wst').onchange=renderW;$('#wsort').onchange=renderW;$('#wcatfilter').onchange=()=>{wFilterConfig();renderW()};['#wattr1','#wattr2','#wattr3','#wminprice','#wmaxprice'].forEach(id=>$(id).addEventListener('change',renderW));$('#wFilterReset').onclick=clearWCategoryFilters;$('#calcProductSort').onchange=renderCalcProductCards;
+$('#wlist').addEventListener('input',e=>{const f=e.target.dataset.f;if(!f)return;const w=watch[e.target.dataset.k];if(w){w[f]=e.target.value;save()}});
+$('#wlist').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;if(b.dataset.sure){delete watch[b.dataset.del];save();renderW();toast('تم الحذف')}else{b.dataset.sure=1;b.classList.add('sure');b.textContent='اضغط للتأكيد';setTimeout(()=>{if(b.isConnected){delete b.dataset.sure;b.classList.remove('sure');b.textContent='حذف'}},3000)}});
+$('#wexp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(watch,null,1)],{type:'application/json'}));a.download='watchlist.json';document.body.appendChild(a);a.click();a.remove()};
+$('#wimp').onclick=()=>$('#wfile').click();
+$('#wfile').onchange=e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);Object.assign(watch,d.watch||d);if(Array.isArray(d.trackHistory))trackHistory=d.trackHistory;save();saveHistory();renderW();renderHistoryProductOptions();toast('تم الاستيراد')}catch(_){toast('ملف النسخة الاحتياطية غير صالح')}};fr.readAsText(f);e.target.value=''};
+
+function renderHistoryProductOptions(){const sel=$('#historyProduct');if(!sel)return;const old=sel.value;sel.innerHTML='<option value="">اختر منتجًا</option>'+Object.values(watch).map(w=>`<option value="${esc(w.asin)}">${esc((w.title||w.asin).slice(0,70))} — ${esc(w.asin)}</option>`).join('');if(watch[old])sel.value=old;renderHistoryChart();}
+function renderHistoryChart(){const root=$('#historyChart');if(!root)return;const asin=$('#historyProduct')?.value,metric=$('#historyMetric')?.value||'price',w=watch[asin];if(!w){root.innerHTML='<p class="sizelegend">اختر منتجًا من القائمة لعرض سجل السعر أو المبيعات أو الإيراد.</p>';return}const pts=(w.history||[]).filter(p=>Number.isFinite(Number(p[metric]))).slice(-90);if(pts.length<2){root.innerHTML='<b>'+esc(w.title||asin)+'</b><p class="sizelegend">توجد '+pts.length+' لقطة صالحة. تحتاج إلى لقطتين أو أكثر في تواريخ مختلفة لرسم الاتجاه. ارفع ملف Helium 10 أحدث لتسجيل لقطة جديدة.</p>';return}const vals=pts.map(p=>Number(p[metric])),min=Math.min(...vals),max=Math.max(...vals),range=max-min||1,W=700,H=230,pad=34;const coords=vals.map((v,i)=>({x:pad+i*(W-2*pad)/(vals.length-1),y:H-pad-(v-min)*(H-2*pad)/range,v}));const line=coords.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');const cur=metric==='price'?currencyLabel($('#calcMarket')?.value||'USA'):metric==='rev'?currencyLabel($('#calcMarket')?.value||'USA'):'units';root.innerHTML=`<b>${esc(w.title||asin)}</b><p class="sizelegend">${metric==='price'?'السعر':metric==='sales'?'المبيعات الشهرية':'الإيراد الشهري'} · عدد اللقطات: ${pts.length} · أقل قيمة: ${moneyFmt(min)} · أعلى قيمة: ${moneyFmt(max)} ${cur}</p><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="الرسم التاريخي" style="width:100%;height:auto;display:block"><line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" stroke="#d7dce5"/><line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#d7dce5"/><path d="${line}" fill="none" stroke="#d9a21b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${coords.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="4" fill="#8a5a00"><title>${p.v}</title></circle>`).join('')}<text x="${pad}" y="18" font-size="12" fill="currentColor">${moneyFmt(max)}</text><text x="${pad}" y="${H-7}" font-size="12" fill="currentColor">${moneyFmt(min)}</text></svg><div class="sizelegend">من ${esc(pts[0].day||'—')} إلى ${esc(pts[pts.length-1].day||'—')}</div>`;}
+$('#historyProduct')?.addEventListener('change',renderHistoryChart);$('#historyMetric')?.addEventListener('change',renderHistoryChart);
+$('#fullBackup')?.addEventListener('click',()=>{const data={app:'Black Box Analyzer',version:2,exportedAt:new Date().toISOString(),watch,trackHistory};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='blackbox_full_backup_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('تم تجهيز النسخة الاحتياطية الكاملة')});
+$('#fullRestore')?.addEventListener('click',()=>$('#fullRestoreFile').click());$('#fullRestoreFile')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);const nw=d.watch||d;if(!nw||typeof nw!=='object'||Array.isArray(nw))throw Error('invalid');if(!confirm('سيتم دمج المنتجات المستعادة مع بياناتك الحالية. هل تريد المتابعة؟'))return;Object.assign(watch,nw);if(Array.isArray(d.trackHistory))trackHistory=d.trackHistory;save();saveHistory();syncStars();renderW();renderHistoryProductOptions();toast('تمت استعادة النسخة الاحتياطية')}catch(_){toast('ملف النسخة الاحتياطية غير صالح')}finally{e.target.value=''}};fr.readAsText(f)});
+function checkPriceAlerts(){const hits=Object.values(watch).filter(w=>w.priceAlert!==undefined&&w.priceAlert!==''&&Number.isFinite(Number(w.priceAlert))&&Number.isFinite(Number(w.price))&&Number(w.price)<=Number(w.priceAlert));if(hits.length)setTimeout(()=>toast('تنبيه سعر: '+hits.length+' منتج وصل إلى السعر المستهدف أو أقل'),1100)}
+syncStars();renderHistoryProductOptions();checkPriceAlerts();
+const startupChanges=trackHistory.filter(x=>x.type==='change'&&Date.now()-new Date(x.checkedAt).getTime()<86400000);if(startupChanges.length){setTimeout(()=>toast(`تنبيه: لديك ${startupChanges.length} تغيير مسجل خلال آخر 24 ساعة — افتح صفحة تتبع السعر`),800)}
+
+/* ===== الملفات المحفوظة (IndexedDB) ===== */
+const MKT_AR={UAE:'الإمارات 🇦🇪',SA:'السعودية 🇸🇦',CA:'كندا 🇨🇦',USA:'أمريكا 🇺🇸'};
+const idb=()=>new Promise((res,rej)=>{const q=indexedDB.open('bb_files',1);q.onupgradeneeded=()=>q.result.createObjectStore('files',{keyPath:'id'});q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});
+const idbDo=async(mode,fn)=>{const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('files',mode),st=t.objectStore('files'),r=fn(st);t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})};
+const pad2=n=>String(n).padStart(2,'0');
+async function saveCurrentFile(){
+  if(!lastBuf){toast('لا يوجد ملف مفتوح');return}
+  const d=new Date(),day=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()),time=pad2(d.getHours())+':'+pad2(d.getMinutes());
+  const mk=CUR.code,id=lastName+'|'+mk+'|'+day;
+  try{
+    await idbDo('readwrite',st=>st.put({id,name:lastName,market:mk,day,time,count:rows.length,buf:lastBuf}));
+    toast('تم الحفظ: '+lastName+' — '+(MKT_AR[mk]||mk)+' — '+day);renderSavedFiles();
+  }catch(e){toast('تعذّر الحفظ في هذا المتصفح')}
+}
+async function renderSavedFiles(){
+  const box=$('#savedFiles'),box2=document.getElementById('sfList');
+  let list=[];try{list=await idbDo('readonly',st=>st.getAll())||[]}catch(e){if(box)box.innerHTML='';return}
+  list.sort((a,b)=>(b.day+b.time).localeCompare(a.day+a.time));
+  const html=list.length?'<p class="sfh">📁 الملفات المحفوظة ('+list.length+')</p>'+list.map(x=>`<div class="sfi"><b>${esc(x.name)}</b><small>السوق: ${esc(MKT_AR[x.market]||x.market)} · التاريخ: ${esc(x.day)} ${esc(x.time||'')} · ${x.count} منتج</small><div class="sfa"><button class="btn" data-sf-open="${esc(x.id)}">فتح</button><button class="btn ghost" data-sf-ren="${esc(x.id)}">✏️ تغيير الاسم</button><button class="btn ghost" data-sf-del="${esc(x.id)}">حذف</button></div></div>`).join(''):'';
+  if(box)box.innerHTML=html;if(box2)box2.innerHTML=html||'<p class="sfh">لا توجد ملفات محفوظة بعد. افتح ملفًا واضغط «حفظ الملف».</p>';
+}
+document.addEventListener('click',async e=>{
+  const o=e.target.closest('[data-sf-open]'),d=e.target.closest('[data-sf-del]');
+  if(o){try{const r=await idbDo('readonly',st=>st.get(o.dataset.sfOpen));if(r)load(r.buf,r.name)}catch(x){toast('تعذّر فتح الملف')}}
+  const rn=e.target.closest('[data-sf-ren]');
+  if(rn){try{const r=await idbDo('readonly',st=>st.get(rn.dataset.sfRen));if(r){const nn=(prompt('الاسم الجديد للملف:',r.name)||'').trim();if(nn&&nn!==r.name){r.name=nn;await idbDo('readwrite',st=>st.put(r));toast('تم تغيير الاسم');renderSavedFiles()}}}catch(x){toast('تعذّر تغيير الاسم')}}
+  if(d&&confirm('حذف هذا الملف المحفوظ؟')){try{await idbDo('readwrite',st=>st.delete(d.dataset.sfDel));renderSavedFiles()}catch(x){}}
+});
+document.addEventListener('click',e=>{
+  const ov=document.getElementById('sfOverlay');if(!ov)return;
+  if(e.target.closest('#nF')){renderSavedFiles();ov.style.display='flex';return}
+  if(e.target.closest('#sfClose')||e.target===ov||e.target.closest('[data-sf-open]'))ov.style.display='none';
+});
+{const sb=document.getElementById('saveFile');if(sb)sb.onclick=saveCurrentFile}
+renderSavedFiles();
+$('#pick').onclick=()=>$('#file').click();
+$('#again').onclick=()=>{$('#file').value='';$('#file').click()};
+$('#file').onchange=e=>read(e.target.files[0]);
+const dz=$('#drop');
+['dragover','dragenter'].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault();dz.classList.add('over')}));
+['dragleave','drop'].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault();dz.classList.remove('over')}));
+dz.addEventListener('drop',e=>read(e.dataTransfer.files[0]));
+['#q','#cat','#ful','#tier','#siz','#col','#sort'].forEach(s=>$(s).addEventListener('input',apply));
+$('#vc').onclick=()=>{mode='c';$('#vc').setAttribute('aria-pressed',true);$('#vt').setAttribute('aria-pressed',false);render()};
+$('#vt').onclick=()=>{mode='t';$('#vt').setAttribute('aria-pressed',true);$('#vc').setAttribute('aria-pressed',false);render()};
+$('#out').addEventListener('click',e=>{const kk=e.target.closest('[data-k]');if(kk){e.stopPropagation();cmpToggle(kk.dataset.k,rows.find(x=>String(x.ASIN)===kk.dataset.k));return}const w=e.target.closest('[data-a]');if(w){toggleW(rows.find(x=>x.ASIN===w.dataset.a));return}const t=e.target.closest('[data-i]');if(t)openM(view[+t.dataset.i])});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM()});
+$('#gold').onclick=()=>{$('#tier').value='top';$('#sort').value='_sc:d';apply()};
+$('#copy').onclick=async()=>{
+  const t=view.map(r=>r.ASIN).join('\n');
+  try{await navigator.clipboard.writeText(t);toast('تم نسخ '+view.length+' ASIN')}
+  catch(e){try{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('تم نسخ '+view.length+' ASIN')}catch(_){toast('تعذّر النسخ على هذا المتصفح')}}
+};
+
+// ===== Budget / Wallet (USD) =====
+const WKEY='bb_wallet_v1';
+let wallet={tx:[]},walletAll=false;
+try{wallet=JSON.parse(localStorage.getItem(WKEY)||'null')||{tx:[]};if(!Array.isArray(wallet.tx))wallet.tx=[]}catch(e){wallet={tx:[]}}
+const saveWallet=()=>{try{localStorage.setItem(WKEY,JSON.stringify(wallet))}catch(e){toast('تعذر حفظ الميزانية')}};
+const r2=n=>Math.round((Number(n)||0)*100)/100;
+const usd=n=>(Number(n)<0?'−':'')+'$'+Math.abs(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const walletBalance=()=>r2(wallet.tx.reduce((a,t)=>a+(Number(t.amt)||0),0));
+function syncCalcBudget(){const input=$('#cBudget');if(!input)return;const m=marketInfo($('#calcMarket')?.value||'USA');input.value=r2(walletBalance()*(m.perUSD||1)).toFixed(2);input.title='مرتبط تلقائيًا بالرصيد المتاح في صفحة المخزون ('+usd(walletBalance())+' USD)';}
+// Existing stock recorded before the budget feature is not charged retroactively.
+Object.values(watch).forEach(w=>{if(!w.walletSynced&&(Number(w.purchaseQty)>0||Number(w.soldQty)>0))w.walletSynced={b:Number(w.purchaseQty)||0,s:Number(w.soldQty)||0}});
+function walletUnit(w){
+ const c=w.calc||{},m=marketInfo(c.market||'USA'),r=m.perUSD||1;
+ const buy=Number(c.buy??w.target)||0,ship=Number(c.ship)||0,other=Number(c.other)||0;
+ const sale=Number(c.sale)||Number(w.price)||0;
+ const pct=(Number(c.referral??15)+Number(c.ads??10)+Number(c.returns??3))/100,fba=Number(c.fba)||0;
+ const amz=sale*pct+fba;
+ return {buy:(buy+ship+other)/r,sale:sale/r,amz:amz/r,credit:(sale-amz)/r};
+}
+function addTx(t){wallet.tx.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),date:new Date().toISOString(),...t,amt:r2(t.amt)})}
+function syncWallet(){
+ let spent=0,earned=0,changed=false;
+ Object.values(watch).forEach(w=>{
+  const sy=w.walletSynced||(w.walletSynced={b:0,s:0});
+  const b=Math.max(0,Number(w.purchaseQty)||0),s=Math.max(0,Number(w.soldQty)||0);
+  if(b===sy.b&&s===sy.s)return;
+  const u=walletUnit(w),base={asin:w.asin||'',title:w.title||w.asin||'منتج',supplier:(w.supplier||'').trim()};
+  if(b!==sy.b){const q=b-sy.b;addTx({...base,type:'buy',qty:q,amt:-q*u.buy,detail:`${Math.abs(q)} × ${usd(u.buy)} (سعر الشراء + الشحن + أخرى)`});spent+=q*u.buy;sy.b=b;changed=true}
+  if(s!==sy.s){const q=s-sy.s;addTx({...base,type:'sell',qty:q,amt:q*u.credit,detail:`${Math.abs(q)} × (بيع ${usd(u.sale)} − رسوم أمازون ${usd(u.amz)}) = ${usd(u.credit)}`});earned+=q*u.credit;sy.s=s;changed=true}
+ });
+ if(changed){save();saveWallet();const bits=[];if(spent)bits.push((spent>0?'خصم ':'استرجاع ')+usd(Math.abs(spent)));if(earned)bits.push((earned>0?'إضافة ':'خصم ')+usd(Math.abs(earned)));if(bits.length)toast(bits.join(' · ')+' — الرصيد: '+usd(walletBalance()))}
+}
+function fmtDate(iso){const d=new Date(iso);if(isNaN(d))return '—';const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
+function renderWallet(){
+ syncCalcBudget();
+ const box=$('#walletBox');if(!box)return;
+ const asc=wallet.tx.slice().sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+ let run=0;asc.forEach(t=>{run=r2(run+t.amt);t._after=run});
+ const bal=walletBalance(),spent=r2(-asc.filter(t=>t.type==='buy').reduce((a,t)=>a+t.amt,0)),inc=r2(asc.filter(t=>t.type==='sell').reduce((a,t)=>a+t.amt,0));
+ const list=asc.slice().reverse(),shown=walletAll?list:list.slice(0,25);
+ const label=t=>t.type==='buy'?(t.amt<0?'شراء':'تصحيح شراء'):t.type==='sell'?(t.amt>0?'بيع':'تصحيح بيع'):(t.amt>=0?'إيداع / تعديل الرصيد':'سحب / تعديل الرصيد');
+ box.innerHTML=`<div class="wTopGrid">
+ <div class="wCard" aria-label="رصيد الميزانية">
+  <div class="wRow"><span class="wBrand">BLACK BOX</span><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#F7CF62" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 8.5a5 5 0 0 1 0 7"/><path d="M12 6a8.5 8.5 0 0 1 0 12"/><path d="M15.5 3.5a12 12 0 0 1 0 17"/></svg></div>
+  <div class="wChip"></div>
+  <div><div class="wLbl">Available balance · USD</div><div class="wBal${bal<0?' neg':''}">${usd(bal)}</div></div>
+  <div class="wRow"><span class="wNum">•••• •••• •••• 2026</span><span class="wLbl">BUDGET</span></div>
+ </div>
+ <div class="wPanel">
+  <h3>الميزانية (دولار أمريكي)</h3>
+  <div class="wEdit"><label>تعديل الرصيد الحالي (USD)<input id="wInput" type="number" step="0.01" inputmode="decimal" value="${bal}"></label><button class="btn" type="button" data-w-save>حفظ الرصيد</button></div>
+  <div class="wKpis"><div class="wKpi r"><span>إجمالي المشتريات</span><b>${usd(spent)}</b></div><div class="wKpi g"><span>إجمالي المبيعات (صافي)</span><b>${usd(inc)}</b></div><div class="wKpi ${inc-spent>=0?'g':'r'}"><span>الفرق</span><b>${usd(inc-spent)}</b></div></div>
+  <p class="sizelegend" style="margin:0">الشراء يخصم كل تكاليف الشراء (السعر + الشحن + أخرى). البيع يضيف سعر البيع بعد خصم رسوم أمازون (العمولة، FBA، الإعلانات، المرتجعات). تُحسب العمليات تلقائيًا عند تغيير الكمية المشتراة أو المباعة.</p>
+ </div></div>
+ <div class="wLedger"><h3><span>سجل العمليات</span><span class="sizelegend" style="margin:0">${list.length} عملية</span></h3>
+ ${shown.length?shown.map(t=>`<div class="wTx ${t.amt<0?'out':'in'}"><div class="wIco">${t.amt<0?'↓':'↑'}</div><div class="wInfo"><b>${esc(label(t))} · ${esc(t.title||'—')}</b><small>${t.supplier?'المورد: '+esc(t.supplier)+' · ':''}${t.qty?'الكمية: '+Math.abs(t.qty)+' · ':''}${fmtDate(t.date)}</small>${t.detail?`<small>${esc(t.detail)}</small>`:''}${t.note?`<small>${esc(t.note)}</small>`:''}</div><div class="wAmt">${t.amt>0?'+':''}${usd(t.amt)}<small>الرصيد: ${usd(t._after)}</small></div><button class="wDel" type="button" data-w-del="${esc(t.id)}" aria-label="حذف العملية">×</button></div>`).join(''):'<div class="empty">لا توجد عمليات بعد. غيّر الكمية المشتراة أو المباعة لأي منتج وسيُسجَّل ذلك هنا.</div>'}
+ ${list.length>25?`<div style="text-align:center;margin-top:8px"><button class="btn ghost" type="button" data-w-more>${walletAll?'عرض أقل':'عرض كل العمليات'}</button></div>`:''}</div>`;
+}
+function injectSupplier(){
+ document.querySelectorAll('#inventoryList .inventoryDetails').forEach(d=>{
+  const k=d.querySelector('[data-k]')?.dataset.k,w=watch[k];if(!w||d.querySelector('[data-supplier]'))return;
+  const mf=d.querySelector('.mfields');if(!mf)return;
+  const l=document.createElement('label');l.className='wSup';l.innerHTML='اسم المورد (يظهر في سجل الميزانية)<input type="text" data-supplier="'+esc(k)+'" value="'+esc(w.supplier||'')+'" placeholder="مثال: Alibaba - اسم المورد">';
+  mf.parentNode.insertBefore(l,mf);
+ });
+}
+const _renderInventory=renderInventory;
+renderInventory=function(){syncWallet();_renderInventory();injectSupplier();renderWallet()};
+$('#inventoryList').addEventListener('change',e=>{const k=e.target.dataset.supplier;if(k===undefined)return;const w=watch[k];if(!w)return;w.supplier=e.target.value.trim();save()});
+function saveWalletBalance(){
+ const v=Number($('#wInput').value);if(!Number.isFinite($('#wInput').value===''?NaN:v)){toast('أدخل رقمًا صحيحًا');return}
+ const diff=r2(v-walletBalance());if(!diff){toast('الرصيد كما هو');return}
+ addTx({type:'adj',title:'تعديل الرصيد يدويًا',supplier:'',qty:0,amt:diff,detail:'',note:''});saveWallet();renderWallet();toast('تم تحديث الرصيد إلى '+usd(v));
+}
+$('#walletBox').addEventListener('click',e=>{
+ if(e.target.closest('[data-w-save]')){saveWalletBalance();return}
+ const d=e.target.closest('[data-w-del]');if(d){if(confirm('حذف هذه العملية من السجل؟ سيتغير الرصيد تبعًا لذلك.')){wallet.tx=wallet.tx.filter(t=>t.id!==d.dataset.wDel);saveWallet();renderWallet()}return}
+ if(e.target.closest('[data-w-more]')){walletAll=!walletAll;renderWallet()}
+});
+$('#walletBox').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='wInput'){e.preventDefault();saveWalletBalance()}});
+renderWallet();
+
+/* ===================== صفحة مقارنة المنتجات ===================== */
+const CMP_KEY='bb_compare_v1',CMP_MAX=6;
+let cmp={sel:[],cost:{},snaps:{},profile:'balanced',diff:false};
+try{const x=JSON.parse(localStorage.getItem(CMP_KEY)||'null');if(x&&Array.isArray(x.sel))cmp=Object.assign(cmp,x)}catch(e){}
+const cmpSave=()=>{try{localStorage.setItem(CMP_KEY,JSON.stringify(cmp))}catch(e){}};
+const cmpFin=v=>typeof v==='number'&&Number.isFinite(v);
+const cmpClamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const kbtn=r=>`<span class="kbt ${cmp.sel.includes(String(r.ASIN))?'on':''}" data-k="${esc(r.ASIN)}" role="button" aria-label="إضافة أو إزالة من المقارنة" title="مقارنة">⇄</span>`;
+function syncCmp(){document.querySelectorAll('.kbt').forEach(e=>e.classList.toggle('on',cmp.sel.includes(e.dataset.k)));const n=$('#kn');if(n)n.textContent=cmp.sel.length}
+
+function cmpFromRow(r){
+  const n=k=>num(r[k]);
+  return {asin:String(r.ASIN),title:String(r.Title||''),brand:String(r.Brand||''),img:r['Image URL']||'',url:r.URL||'',category:r.Category||'',sub:r.Subcategory||'',ful:r.Fulfillment||'',seller:String(r.Seller||''),
+    price:n('Price'),priceTrend:n('Price Trend (90 days) (%)'),sales:n('Monthly Sales'),rev:n('Monthly Revenue'),salesTrend:n('Sales Trend (90 days) (%)'),yoy:n('Sales Year Over Year (%)'),
+    bsr:n('BSR'),reviews:n('Review Count'),rating:n('Reviews Rating'),sellers:n('Number of Active Sellers'),age:n('Listing Age (Months)'),imgs:n('Number of Images'),vars:n('Variation Count'),sc:r._sc,
+    dim:{L:r.Length,W:r.Width,H:r.Height,Wt:r.Weight}};
+}
+function cmpFromWatch(w){
+  if(!w)return null;const n=v=>typeof v==='number'?v:num(v);
+  return {asin:String(w.asin),title:String(w.title||''),brand:String(w.brand||''),img:w.img||'',url:w.url||'',category:w.category||'',sub:w.subcategory||'',ful:w.fulfillment||'',seller:'',
+    price:n(w.price),priceTrend:n(w.priceTrend),sales:n(w.sales),rev:n(w.rev),salesTrend:n(w.salesTrend),yoy:n(w.yoy),bsr:n(w.bsr),reviews:n(w.reviews),rating:n(w.rating),
+    sellers:NaN,age:NaN,imgs:NaN,vars:NaN,sc:w.sc,dim:{}};
+}
+function cmpSpecs(title){
+  const t=String(title||''),u=t.toUpperCase(),d=detect(t);let m;
+  const colors=d.k.map(v=>CL[v][1]+' ('+CL[v][0]+')');
+  if(/\b(transparent|clear)\b/i.test(t))colors.push('شفاف (Clear)');
+  if(/rose[\s-]*gold/i.test(t))colors.push('روز جولد (Rose Gold)');
+  const uniq=a=>[...new Set(a)].slice(0,4);
+  const vol=uniq([...t.matchAll(/(\d+(?:\.\d+)?)\s*(fl\.?\s?oz|oz|ml|ltr|liters?|litres?|l|gallons?|gal|quarts?|qt|cc)\b/gi)].map(x=>x[1]+' '+x[2].replace(/\s+/g,' ').toLowerCase()));
+  const wt=uniq([...t.matchAll(/(\d+(?:\.\d+)?)\s*(kg|g|grams?|lbs?|pounds?)\b/gi)].map(x=>x[1]+' '+x[2].toLowerCase()));
+  m=t.match(/\b(\d{1,3})\s*(?:pack|pcs|pieces|count|sets?|compartments?|pairs?)\b/i)||t.match(/\b(?:pack|set)\s*of\s*(\d{1,3})\b/i);
+  const pack=m?m[1]+' قطعة':'';
+  m=u.match(/\b(\d{2,4})\s*GSM\b/);const gsm=m?m[1]+' GSM':'';
+  m=u.match(/\b\d+(?:\.\d+)?\s*[X×*]\s*\d+(?:\.\d+)?(?:\s*[X×*]\s*\d+(?:\.\d+)?)?\s*(?:CM|MM|IN|INCH(?:ES)?|"|FT)?/);const dims=m?m[0].replace(/\s+/g,' ').trim():'';
+  const mats=['stainless steel','silicone','cotton','polyester','nylon','plastic','bamboo','microfiber','velvet','leather','glass','wood','ceramic','spandex','wool','linen','metal','aluminum','rubber','foam'];
+  const material=mats.filter(v=>t.toLowerCase().includes(v)).slice(0,3);
+  return {sizes:d.z,colors:uniq(colors),volume:vol,weight:wt,pack,gsm,dims,material};
+}
+function cmpResolve(a){
+  let o=null;
+  if(loaded){const r=rows.find(x=>String(x.ASIN)===a);if(r)o=cmpFromRow(r)}
+  if(!o&&watch[a])o=cmpFromWatch(watch[a]);
+  if(!o&&cmp.snaps[a])o=Object.assign({},cmp.snaps[a]);
+  if(o)o.spec=cmpSpecs(o.title);
+  return o;
+}
+function cmpToggle(a,r){
+  a=String(a);const i=cmp.sel.indexOf(a);
+  if(i>=0){cmp.sel.splice(i,1);delete cmp.snaps[a];toast('أُزيل من المقارنة')}
+  else{
+    if(cmp.sel.length>=CMP_MAX){toast('الحد الأقصى '+CMP_MAX+' منتجات للمقارنة');return}
+    const o=r?cmpFromRow(r):cmpFromWatch(watch[a]);if(!o)return;
+    cmp.snaps[a]=o;cmp.sel.push(a);toast('أُضيف للمقارنة ('+cmp.sel.length+')');
+  }
+  cmpSave();syncCmp();if($('#cmpPage').style.display==='block')renderCmp();
+}
+function cmpToCalc(a){
+  if(!watch[a]){const r=rows.find(x=>String(x.ASIN)===a);if(r)toggleW(r);else{toast('أضف المنتج للمفضلة أو ارفع ملفه أولاً');return}}
+  showTab('C');$('#calcProduct').value=a;loadCalcProduct();
+}
+
+/* ---- الربحية التقديرية (بإعدادات حاسبة الأرباح) ---- */
+function cmpMargin(p){
+  const c=num(cmp.cost[p.asin]);
+  if(!cmpFin(c)||c<0||!cmpFin(p.price)||!p.price)return null;
+  const g=id=>{const v=Number($(id)&&$(id).value);return Number.isFinite(v)?v:0};
+  const fee=p.price*(g('#cReferral')+g('#cAds')+g('#cReturns'))/100+g('#cFba')+g('#cOther');
+  const profit=p.price-fee-c;
+  return {profit,margin:profit/p.price*100,roi:c>0?profit/c*100:NaN};
+}
+
+/* ---- التقييم المقارن ---- */
+const CMP_W={
+  balanced:{sales:.2,rev:.1,comp:.2,sellers:.1,growth:.15,margin:.15,opp:.1},
+  profit:{margin:.4,rev:.15,sales:.15,comp:.1,sellers:.05,growth:.1,opp:.05},
+  lowcomp:{comp:.35,sellers:.2,sales:.15,growth:.1,rev:.05,margin:.1,opp:.05},
+  demand:{sales:.35,rev:.2,growth:.2,comp:.1,sellers:.05,margin:.05,opp:.05}
+};
+const CMP_PROF={balanced:'متوازن بين الطلب والمنافسة والنمو',profit:'يركّز على الربح (يحتاج تكلفة كل منتج)',lowcomp:'يفضّل المنتج الأسهل دخولاً وأقل منافسة',demand:'يفضّل الأعلى طلباً ونمواً'};
+function cmpScore(items,profile){
+  const W=Object.assign({},CMP_W[profile]||CMP_W.balanced);
+  const m=items.map(cmpMargin),useMargin=m.every(Boolean);
+  if(!useMargin)delete W.margin;
+  const fin=k=>items.map(p=>p[k]).filter(cmpFin);
+  const mxS=Math.max(...fin('sales'),0),mxR=Math.max(...fin('rev'),0),mnRv=Math.min(...fin('reviews')),mnSl=Math.min(...fin('sellers'));
+  const res=items.map((p,i)=>{
+    const s={};
+    s.sales=cmpFin(p.sales)&&mxS>0?p.sales/mxS:null;
+    s.rev=cmpFin(p.rev)&&mxR>0?p.rev/mxR:null;
+    s.comp=cmpFin(p.reviews)&&Number.isFinite(mnRv)?(mnRv+20)/(p.reviews+20):null;
+    s.sellers=cmpFin(p.sellers)&&Number.isFinite(mnSl)?Math.max(mnSl,1)/Math.max(p.sellers,1):null;
+    const g=[p.salesTrend,p.yoy].filter(cmpFin);
+    s.growth=g.length?cmpClamp(.5+(g.reduce((a,b)=>a+b,0)/g.length)/100,0,1):null;
+    s.opp=cmpFin(p.sc)?p.sc/100:null;
+    s.margin=m[i]?cmpClamp(m[i].margin/40,0,1):null;
+    let tot=0,wsum=0;
+    for(const k in W){tot+=W[k]*(s[k]==null?.4:s[k]);wsum+=W[k]}
+    return {score:Math.round(100*tot/wsum),s,m:m[i]};
+  });
+  return {res,useMargin};
+}
+function cmpNotes(i,items,sc){
+  const p=items[i],r=sc.res[i],pros=[],cons=[];
+  const fin=k=>items.map(x=>x[k]).filter(cmpFin);
+  const mxS=Math.max(...fin('sales'),0),mxR=Math.max(...fin('rev'),0),mnRv=Math.min(...fin('reviews'));
+  if(cmpFin(p.sales)&&p.sales>0&&p.sales===mxS)pros.push('الأعلى طلباً: '+fmt(p.sales)+' مبيعة شهرياً');
+  else if(cmpFin(p.sales)&&mxS>0&&p.sales<.4*mxS)cons.push('طلبه أقل بكثير من الأفضل ('+fmt(p.sales)+' شهرياً)');
+  if(cmpFin(p.rev)&&p.rev>0&&p.rev===mxR&&p.sales!==mxS)pros.push('الأعلى إيراداً شهرياً');
+  if(cmpFin(p.reviews)){
+    if(p.reviews<100)pros.push('تقييمات قليلة ('+fmt(p.reviews)+') = دخول أسهل');
+    else if(p.reviews===mnRv&&p.reviews<300)pros.push('أقل منافسة تقييمات بينهم ('+fmt(p.reviews)+')');
+    else if(p.reviews>=500)cons.push('تقييمات كثيرة ('+fmt(p.reviews)+') = صعب اللحاق');
+  }
+  if(cmpFin(p.rating)){
+    if(p.rating>0&&p.rating<4.3)pros.push('تقييمه '+fmt(p.rating)+' — فرصة لتقديم جودة أفضل');
+    else if(p.rating>=4.6)cons.push('تقييم مرتفع جداً ('+fmt(p.rating)+') — صعب التفوق بالجودة');
+  }
+  if(cmpFin(p.salesTrend)){
+    if(p.salesTrend>=10)pros.push('مبيعاته تنمو (+'+fmt(p.salesTrend)+'% خلال 90 يوماً)');
+    else if(p.salesTrend<=-10)cons.push('مبيعاته في تراجع ('+fmt(p.salesTrend)+'% خلال 90 يوماً)');
+  }
+  if(cmpFin(p.yoy)&&p.yoy>=20)pros.push('نمو سنوي +'+fmt(p.yoy)+'%');
+  if(cmpFin(p.priceTrend)&&p.priceTrend<=-10)cons.push('سعره ينخفض ('+fmt(p.priceTrend)+'%) — احتمال حرب أسعار');
+  if(cmpFin(p.sellers)){if(p.sellers<=3)pros.push('بائعون قليلون ('+fmt(p.sellers)+')');else if(p.sellers>=15)cons.push('بائعون كثر ('+fmt(p.sellers)+')')}
+  if(/amazon/i.test(p.seller))cons.push('أمازون نفسها هي البائع');
+  if(cmpFin(p.age)&&p.age<=12&&cmpFin(p.sales)&&p.sales>0)pros.push('منتج حديث ('+fmt(p.age)+' شهراً) وبدأ يبيع');
+  const m=r.m;
+  if(m){if(m.profit<0)cons.push('خسارة بالتكلفة المدخلة ('+fmt(m.profit)+' '+CUR.c+' للوحدة)');else if(m.margin>=25)pros.push('هامش ربح تقديري '+fmt(m.margin)+'%');else if(m.margin<10)cons.push('هامش ضعيف ('+fmt(m.margin)+'%)')}
+  return {pros:pros.slice(0,3),cons:cons.slice(0,3)};
+}
+
+/* ---- الاختيار والبحث ---- */
+function cmpImgTag(u){return u?`<img src="${esc(u)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<i>لا صورة</i>'">`:'<i>لا صورة</i>'}
+function cmpCands(){
+  const m=new Map();
+  Object.values(watch).forEach(w=>m.set(String(w.asin),{asin:String(w.asin),title:w.title||'',brand:w.brand||'',img:w.img,price:w.price,sales:w.sales,sc:w.sc,src:'fav'}));
+  if(loaded)rows.forEach(r=>{const a=String(r.ASIN),ex=m.get(a);if(ex)ex.src='both';else m.set(a,{asin:a,title:String(r.Title||''),brand:String(r.Brand||''),img:r['Image URL'],price:num(r.Price),sales:num(r['Monthly Sales']),sc:r._sc,src:'file'})});
+  return [...m.values()];
+}
+function renderCmpPicker(){
+  $('#cmpChips').innerHTML=cmp.sel.length?cmp.sel.map(a=>{const p=(cmp.snaps[a]||(watch[a]&&cmpFromWatch(watch[a]))||{});return `<span class="cmpchip"><span>${esc((p.title||a).slice(0,40))}</span><button type="button" data-rm="${esc(a)}" aria-label="إزالة">✕</button></span>`}).join('')+`<span class="count" style="align-self:center">${cmp.sel.length} من ${CMP_MAX}</span>`:'<span class="count">لم تختر أي منتج بعد.</span>';
+  const q=$('#cmpQ').value.trim().toLowerCase(),src=$('#cmpSrc').value;
+  let l=cmpCands().filter(c=>!cmp.sel.includes(c.asin));
+  if(src==='fav')l=l.filter(c=>c.src!=='file');else if(src==='file')l=l.filter(c=>c.src!=='fav');
+  if(q)l=l.filter(c=>[c.title,c.brand,c.asin].some(x=>String(x).toLowerCase().includes(q)));
+  l.sort((a,b)=>((b.src!=='file')-(a.src!=='file'))||((b.sc||0)-(a.sc||0)));
+  const tot=l.length;l=l.slice(0,12);
+  if(!tot){$('#cmpList').innerHTML='<div class="empty">'+(cmpCands().length?'لا توجد نتائج مطابقة.':'لا توجد منتجات بعد. ارفع ملف Helium 10 من تبويب «المنتجات» أو أضف منتجات للمفضلة.')+'</div>';return}
+  $('#cmpList').innerHTML=l.map(c=>`<div class="cmpi"><div class="cmpimg">${cmpImgTag(c.img)}</div><div class="cmpim"><div class="br">${esc(c.brand)}${c.src!=='file'?' · ★ مفضلة':''}</div><div class="ti">${esc(c.title)}</div><div class="chips">${cmpFin(c.price)?`<span class="chip">${fmt(c.price)} ${CUR.c}</span>`:''}${cmpFin(c.sales)?`<span class="chip ok">مبيعات ${fmt(c.sales)}</span>`:''}</div></div><button class="btn" type="button" data-add="${esc(c.asin)}">＋ أضف</button></div>`).join('')+(tot>12?`<div class="cmpmore">يعرض 12 من ${tot} — اكتب في البحث لتضييق النتائج.</div>`:'');
+}
+function cmpSimilar(){
+  if(!cmp.sel.length){toast('أضف منتجاً أولاً ثم اطلب المشابهة');return}
+  if(!loaded){toast('ارفع ملف Helium 10 أولاً لاقتراح منتجات مشابهة');return}
+  const base=cmpResolve(cmp.sel[0]);if(!base)return;
+  const stop=new Set(['the','and','for','with','pack','set','of','in','to','by','an','pcs','piece','pieces','new','your','you','from','that','this']);
+  const tok=s=>new Set((String(s).toLowerCase().match(/[a-z\u0600-\u06FF]{3,}/g)||[]).filter(w=>!stop.has(w)));
+  const bt=tok(base.title);if(!bt.size){toast('لا يمكن استخراج كلمات من عنوان المنتج');return}
+  const room=Math.min(3,CMP_MAX-cmp.sel.length);if(room<=0){toast('وصلت للحد الأقصى من المنتجات');return}
+  const cand=[];
+  rows.forEach(r=>{const a=String(r.ASIN);if(cmp.sel.includes(a))return;const t=tok(r.Title);let i=0;t.forEach(w=>{if(bt.has(w))i++});const j=i/(bt.size+t.size-i||1)+(r.Category&&r.Category===base.category?.08:0);if(j>.12)cand.push([j,r])});
+  cand.sort((a,b)=>b[0]-a[0]);
+  const pick=cand.slice(0,room);
+  if(!pick.length){toast('لم أجد منتجات مشابهة كفاية في الملف');return}
+  pick.forEach(([,r])=>{const o=cmpFromRow(r);cmp.snaps[o.asin]=o;cmp.sel.push(o.asin)});
+  cmpSave();syncCmp();renderCmp();toast('أُضيفت '+pick.length+' منتجات مشابهة');
+}
+
+/* ---- جدول المقارنة ---- */
+function cmpRows(items,sc){
+  const na='<span class="cmpna">—</span>';
+  const pct=v=>`<span class="${v>0?'up':v<0?'down':''}">${v>0?'▲ ':v<0?'▼ ':''}${fmt(Math.abs(v))}%</span>`;
+  const cur=v=>fmt(v)+' '+CUR.c;
+  const Tx=(l,f)=>({l,get:p=>{const v=f(p);return v?'<bdi>'+esc(v)+'</bdi>':na},raw:p=>String(f(p)||'')});
+  const Nm=(l,k,f,best)=>({l,best,num:p=>p[k],get:p=>cmpFin(p[k])?f(p[k]):na,raw:p=>cmpFin(p[k])?String(p[k]):''});
+  const dm=(p,k)=>{const v=p.dim&&p.dim[k];return v===''||v==null?'':String(v)};
+  const sp=p=>p.spec;
+  return [
+    ['g','الخلاصة'],
+    {l:'درجة المقارنة',best:'max',num:(p,i)=>sc.res[i].score,get:(p,i)=>sc.res[i].score+'/100',raw:(p,i)=>String(sc.res[i].score)},
+    Nm('درجة الفرصة (Helium)','sc',v=>v+'/100','max'),
+    ['g','الأساسيات'],
+    Tx('العلامة التجارية',p=>p.brand),Tx('الفئة',p=>p.sub||p.category),Tx('الشحن',p=>p.ful),Tx('البائع',p=>p.seller),
+    ['g','المواصفات (مستخرجة من العنوان)'],
+    Tx('المقاس',p=>sp(p).sizes.join('، ')),Tx('اللون',p=>sp(p).colors.join('، ')),Tx('الحجم / السعة',p=>sp(p).volume.join('، ')),
+    Tx('الوزن في العنوان',p=>sp(p).weight.join('، ')),Tx('عدد القطع',p=>sp(p).pack),Tx('المادة',p=>sp(p).material.join('، ')),
+    Tx('الكثافة GSM',p=>sp(p).gsm),Tx('الأبعاد في العنوان',p=>sp(p).dims),
+    ['g','الأبعاد والوزن (من الملف)'],
+    Tx('الطول',p=>dm(p,'L')),Tx('العرض',p=>dm(p,'W')),Tx('الارتفاع',p=>dm(p,'H')),Tx('الوزن',p=>dm(p,'Wt')),
+    ['g','السعر والمبيعات'],
+    Nm('السعر','price',cur,null),Nm('اتجاه السعر (90 يوماً)','priceTrend',pct,null),
+    Nm('المبيعات الشهرية','sales',fmt,'max'),Nm('الإيراد الشهري','rev',cur,'max'),
+    Nm('اتجاه المبيعات (90 يوماً)','salesTrend',pct,'max'),Nm('النمو السنوي','yoy',pct,'max'),
+    ['g','المنافسة والجودة'],
+    Nm('ترتيب BSR','bsr',fmt,'min'),Nm('عدد التقييمات','reviews',fmt,'min'),Nm('متوسط التقييم','rating',v=>'★ '+fmt(v),null),
+    Nm('البائعون النشطون','sellers',fmt,'min'),Nm('عمر الإدراج (شهر)','age',fmt,null),Nm('عدد الصور','imgs',fmt,'max'),Nm('عدد النسخ (Variations)','vars',fmt,null),
+    ['g','الربحية التقديرية'],
+    {l:'تكلفة الوحدة واصلة ('+CUR.c+')',keep:true,get:p=>`<input class="cmpcost" type="number" inputmode="decimal" min="0" step="0.01" data-cost="${esc(p.asin)}" value="${esc(cmp.cost[p.asin]??'')}" placeholder="مورد + شحن">`,raw:()=>'x'},
+    {l:'ربح الوحدة',best:'max',num:(p,i)=>sc.res[i].m?sc.res[i].m.profit:NaN,get:(p,i)=>sc.res[i].m?cur(sc.res[i].m.profit):na,raw:(p,i)=>sc.res[i].m?String(sc.res[i].m.profit):''},
+    {l:'هامش الربح',best:'max',num:(p,i)=>sc.res[i].m?sc.res[i].m.margin:NaN,get:(p,i)=>sc.res[i].m?pct(sc.res[i].m.margin):na,raw:(p,i)=>sc.res[i].m?String(sc.res[i].m.margin):''},
+    {l:'العائد على التكلفة ROI',best:'max',num:(p,i)=>sc.res[i].m?sc.res[i].m.roi:NaN,get:(p,i)=>sc.res[i].m&&cmpFin(sc.res[i].m.roi)?pct(sc.res[i].m.roi):na,raw:(p,i)=>sc.res[i].m&&cmpFin(sc.res[i].m.roi)?String(sc.res[i].m.roi):''}
+  ];
+}
+function renderCmpResult(){
+  const box=$('#cmpResult');
+  const items=cmp.sel.map(cmpResolve).filter(Boolean);
+  if(items.length!==cmp.sel.length){cmp.sel=items.map(p=>p.asin);cmpSave();syncCmp();renderCmpPicker()}
+  if(items.length<2){box.innerHTML='<div class="extraBox cmpempty">'+(items.length?'اخترت منتجاً واحداً. أضف منتجاً ثانياً على الأقل ليبدأ التحليل.':'اختر منتجين على الأقل من القائمة أعلاه، أو من البطاقات في تبويب «المنتجات» بزر ⇄.')+'</div>';return}
+  const sc=cmpScore(items,cmp.profile);
+  const order=items.map((p,i)=>i).sort((a,b)=>sc.res[b].score-sc.res[a].score);
+  const w=order[0],wp=items[w],gap=sc.res[w].score-sc.res[order[1]].score;
+  const notes=items.map((p,i)=>cmpNotes(i,items,sc));
+  let verdict=gap>=15?'فارق واضح عن الباقين — هذا أقوى خيار حسب الأرقام.':gap>=6?'الأفضل بفارق معقول، لكن راجع المخاطر قبل القرار.':'الفارق ضئيل بين الأول والثاني — اختر بناءً على قدرتك على تميّز المنتج (جودة، تغليف، سعر المورد) أو أدخل تكلفة كل منتج لحسم الأمر.';
+  if(sc.res[w].score<55)verdict+=' ملاحظة: حتى الأفضل هنا فرصته متوسطة، فكّر بإضافة منتجات بديلة للمقارنة.';
+  const ctl=`<div class="extraBox"><div class="cmpctl" style="margin:0"><label style="flex:1 1 220px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">أولويتك في الاختيار<select id="cmpProf" aria-label="أولويتك"><option value="balanced">متوازن</option><option value="profit">أعلى ربحية</option><option value="lowcomp">أقل منافسة</option><option value="demand">أعلى طلب ونمو</option></select></label><label class="cmpsw"><input type="checkbox" id="cmpDiff" ${cmp.diff?'checked':''}>إظهار الفروقات فقط</label></div><div class="note">${esc(CMP_PROF[cmp.profile]||'')}</div>${!sc.useMargin?'<div class="note">أدخل «تكلفة الوحدة» لكل المنتجات في أسفل الجدول ليدخل الربح في التقييم.</div>':''}</div>`;
+  const dec=`<div class="cmpdec"><div class="cmpdh"><div><small>👑 الخيار المقترح للبيع</small><h3>${esc(wp.title)}</h3></div><div class="cmpbig">${sc.res[w].score}<small>من 100</small></div></div><p>${verdict}</p><ul>${notes[w].pros.map(x=>`<li class="p">${esc(x)}</li>`).join('')}${notes[w].cons.map(x=>`<li class="c">${esc(x)}</li>`).join('')}</ul><div class="links"><button class="btn" type="button" data-calc="${esc(wp.asin)}">حساب الربح لهذا المنتج</button>${wp.url?`<a class="btn ghost" href="${esc(wp.url)}" target="_blank" rel="noopener">فتح في أمازون</a>`:''}</div></div>`;
+  const rank=order.map((i,pos)=>{const p=items[i],r=sc.res[i],n=notes[i];return `<div class="cmprk ${pos===0?'win':''}"><div class="cmpimg">${cmpImgTag(p.img)}</div><div class="cmpim"><div class="br">المركز ${pos+1} — ${esc(p.brand)}</div><div class="ti">${esc(p.title)}</div><div class="bar2"><i style="width:${r.score}%"></i></div><b>${r.score}/100</b><div class="chips">${n.pros.map(x=>`<span class="chip ok">${esc(x)}</span>`).join('')}${n.cons.map(x=>`<span class="chip r">${esc(x)}</span>`).join('')}</div></div></div>`}).join('');
+  const R=cmpRows(items,sc);let body='',pend='';
+  R.forEach(row=>{
+    if(Array.isArray(row)){pend=`<tr class="cmpg"><td colspan="${items.length+1}">${row[1]}</td></tr>`;return}
+    if(cmp.diff&&!row.keep&&new Set(items.map((p,i)=>row.raw(p,i))).size<=1)return;
+    let target=null;
+    if(row.best){const v=items.map((p,i)=>row.num(p,i)).filter(cmpFin);if(v.length>=2&&Math.max(...v)!==Math.min(...v))target=row.best==='max'?Math.max(...v):Math.min(...v)}
+    body+=pend;pend='';
+    body+=`<tr><th scope="row">${row.l}</th>`+items.map((p,i)=>`<td class="${target!==null&&row.num(p,i)===target?'best':''}">${row.get(p,i)}</td>`).join('')+'</tr>';
+  });
+  const head=`<thead><tr><th class="cmph">المعيار</th>${items.map((p,i)=>`<th class="${i===w?'win':''}" >${i===w?'<span class="cmpcrown">👑 الأفضل</span><br>':''}<button class="cmprm" type="button" data-rm="${esc(p.asin)}" aria-label="إزالة من المقارنة">✕</button><div class="cmpimg2">${cmpImgTag(p.img)}</div><div class="br">${esc(p.brand)}</div><div class="cmpti"><bdi>${esc(p.title)}</bdi></div></th>`).join('')}</tr></thead>`;
+  box.innerHTML=ctl+dec+'<h3 style="margin:16px 4px 10px;font-size:16px">ترتيب المنتجات</h3>'+rank+'<h3 style="margin:16px 4px 10px;font-size:16px">جدول المقارنة التفصيلي</h3><div class="note" style="margin:0 4px 8px">الخانات الخضراء = الأفضل في هذا المعيار. اسحب الجدول جانباً لرؤية كل المنتجات.</div><div class="tw cmpw"><table class="cmpt" style="width:'+(118+170*items.length)+'px;min-width:100%"><colgroup><col style="width:118px">'+items.map(()=>'<col style="width:170px">').join('')+'</colgroup>'+head+'<tbody>'+body+'</tbody></table></div><div class="warn">التحليل تقديري مبني على أرقام Helium 10 وتكلفتك المدخلة وإعدادات حاسبة الأرباح، ولا يضمن الربح. تحقق من المورد والجودة قبل الشراء.</div>';
+  $('#cmpProf').value=cmp.profile;
+}
+function renderCmp(){renderCmpPicker();renderCmpResult();syncCmp()}
+
+/* ---- تحليل الفرص ---- */
+const OPP={cur:'',res:null};
+const OPP_RX={
+ ip:[/avenger|marvel|disney|transformer|spider.?man|barbie|pok[eé]mon|frozen|hello kitty|lego|batman|minecraft|paw patrol|peppa|cocomelon|bluey|mickey|sanrio|labubu|stitch/i,'علامة/شخصية مسجلة (خطر ملكية فكرية)'],
+ el:[/electric|rechargeable|batter(y|ies)|usb|plug|heater|\bled\b|lamp|charger|bluetooth|solar|كهربائ/i,'جهاز كهربائي (شهادات ومتطلبات)'],
+ lq:[/diffuser|perfume|essential oil|aerosol|candle|bukhoor|incense|liquid|lotion|serum|مبخرة|بخور|عطر/i,'سوائل/عطور/بخور (قيود شحن)'],
+ fad:[/squish|fidget|slime|pop.?it|stress ball|asmr/i,'منتج موضة عابرة']
+};
+function oppDefaults(){const f=(CUR.r||3.6725)/3.6725;return {oSales:60,oRev:150,oPmin:Math.round(50*f),oPmax:Math.round(200*f),oW:2.2,oTr:-10,oSel:3,oVr:10}}
+function oppSetDefaults(){const d=oppDefaults();Object.keys(d).forEach(k=>$('#'+k).value=d[k]);OPP.cur=CUR.code}
+function oppRead(){const g=(id,dv)=>{const v=parseFloat($(id).value);return isNaN(v)?dv:v};return {sales:g('#oSales',0),rev:g('#oRev',1e9),pmin:g('#oPmin',0),pmax:g('#oPmax',1e9),w:g('#oW',1e9),tr:g('#oTr',-1e9),sel:g('#oSel',1e9),vr:g('#oVr',1e9)}}
+function oppPass(r,f){
+ const s=num(r['Monthly Sales']),rc=num(r['Review Count']),p=num(r.Price),w=num(r.Weight),tr=num(r['Sales Trend (90 days) (%)']),ns=num(r['Number of Active Sellers']),vr=num(r['Variation Count']);
+ if(isNaN(s)||s<f.sales)return false;
+ if(!isNaN(rc)&&rc>f.rev)return false;
+ if(isNaN(p)||p<f.pmin||p>f.pmax)return false;
+ if(!isNaN(w)&&w>f.w)return false;
+ if(!isNaN(tr)&&tr<f.tr)return false;
+ if(!isNaN(ns)&&ns>f.sel)return false;
+ if(!isNaN(vr)&&vr>f.vr)return false;
+ if(/amazon/i.test(String(r.Seller||'')))return false;
+ return true}
+function oppAnalyze(){
+ const f=oppRead(),pass=rows.filter(r=>oppPass(r,f)),clean=[],avoid=[];
+ pass.forEach(r=>{const t=String(r.Title||''),fl=[];for(const k in OPP_RX){if(OPP_RX[k][0].test(t))fl.push(OPP_RX[k][1])}if(fl.length)avoid.push({r,fl});else clean.push(r)});
+ const g={};clean.forEach(r=>{const k=String(r.Subcategory||r.Category||'غير محددة');(g[k]=g[k]||[]).push(r)});
+ const fin=a=>a.filter(Number.isFinite),avg=a=>{a=fin(a);return a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN},med=a=>{a=fin(a).sort((x,y)=>x-y);return a.length?a[Math.floor((a.length-1)/2)]:NaN};
+ const niches=Object.entries(g).map(([name,items])=>{
+  const S=r=>num(r['Monthly Sales'])||0,sales=items.reduce((a,r)=>a+S(r),0);
+  const ar=avg(items.map(r=>num(r['Review Count']))),rt=avg(items.map(r=>num(r['Reviews Rating']))),pr=avg(items.map(r=>num(r.Price))),tr=med(items.map(r=>num(r['Sales Trend (90 days) (%)']))),wt=avg(items.map(r=>num(r.Weight)));
+  const bs={};items.forEach(r=>{const b=String(r.Brand||r.Seller||'?');bs[b]=(bs[b]||0)+S(r)});
+  const brands=Object.keys(bs).length,top=Math.max(...Object.values(bs))/(sales||1);
+  const sc=Math.round(Math.min(sales/500,1)*40+(isNaN(ar)?8:ar<25?25:ar<50?20:ar<100?14:8)+(isNaN(rt)?6:rt<=4.0?15:rt<=4.2?11:6)+(items.length>=3?10:items.length===2?7:4)+(isNaN(tr)?5:tr>=-10&&tr<=200?10:tr>200?5:0));
+  const good=[],warn=[];
+  if(items.length>=3)good.push('الطلب مؤكد: '+items.length+' إعلانات تبيع معًا نحو '+fmt(sales)+' شهريًا');
+  if(!isNaN(ar)&&ar<50)good.push('تقييمات قليلة (متوسط '+fmt(Math.round(ar))+'): دخول أسهل نسبيًا');
+  if(!isNaN(rt)&&rt<=4.1&&rt>=2.5)good.push('تقييم عام ضعيف ('+rt.toFixed(1)+'): فرصة لمنتج أفضل، اقرأ التقييمات السلبية');
+  if(!isNaN(rt)&&rt<2.5)warn.push('تقييم متدنٍ جدًا ('+rt.toFixed(1)+'): افحص هل المشكلة في جودة المنتج أم المورّد');
+  if(items.length>=3&&top>0.7&&brands<=2)warn.push('علامة واحدة تأخذ '+Math.round(top*100)+'% من المبيعات (قد تكون نفس البائع بعدة ASINs)');
+  if(!isNaN(tr)&&tr>500)warn.push('قفزة غير عادية في المبيعات ('+fmt(tr)+'%): تحقق من الموسمية أو الإعلانات قبل الدخول');
+  if(items.some(r=>num(r['Listing Age (Months)'])<=3))warn.push('فيه منتجات عمرها 3 أشهر أو أقل: قد تكون موضة عابرة');
+  if(!isNaN(wt)&&wt>1.5)warn.push('وزن/حجم أعلى من المتوسط: احسب الشحن ورسوم FBA بدقة');
+  return {name,cat:items[0].Category||'',items:items.sort((a,b)=>S(b)-S(a)),sales,ar,rt,pr,tr,brands,sc,good,warn}
+ }).sort((a,b)=>b.sc-a.sc);
+ const av={};avoid.forEach(a=>a.fl.forEach(x=>(av[x]=av[x]||[]).push(a.r)));
+ OPP.res={f,total:rows.length,pass:pass.length,clean:clean.length,niches,avoid,av};return OPP.res}
+const oppLabel=s=>s>=70?['قوية','hi']:s>=55?['جيدة','']:['للمراقبة','lo'];
+function oppItem(r){const i=rows.indexOf(r),tr=num(r['Sales Trend (90 days) (%)']);return `<div class="oppItem">${r['Image URL']?`<img src="${esc(r['Image URL'])}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:''}<div><div class="t">${esc(r.Title||'—')}</div><div class="m">${esc(r.Brand||'—')} · ${fmt(num(r.Price))} ${esc(CUR.c)} · مبيعات ${fmt(num(r['Monthly Sales']))} · ★ ${fmt(num(r['Reviews Rating']))} (${fmt(num(r['Review Count']))})${isNaN(tr)?'':' · اتجاه '+fmt(tr)+'%'}</div><div class="a"><button class="btn ghost" type="button" data-oppm="${i}">التفاصيل</button>${r.URL?`<a class="btn" href="${esc(r.URL)}" target="_blank" rel="noopener">أمازون</a>`:''}</div></div></div>`}
+function renderOpp(){
+ const out=$('#oppOut');
+ if(!loaded||!rows.length){out.innerHTML='<div class="extraBox"><p>ارفع ملف Black Box / Helium 10 أولًا ليحلله البرنامج.</p><button class="btn" id="oUp" type="button">اختيار ملف Excel</button></div>';return}
+ if(OPP.cur!==CUR.code)oppSetDefaults();
+ const R=oppAnalyze();
+ const kp=(n,l)=>`<div class="sizekpi"><b>${n}</b><span>${l}</span></div>`;
+ let h=`<div class="sizekpis">${kp(fmt(R.total),'منتجات في الملف')}${kp(fmt(R.pass),'اجتازت الفلاتر')}${kp(fmt(R.niches.length),'نيتشات مرشحة')}${kp(fmt(R.avoid.length),'منتجات للتجنب')}</div>`;
+ if(!R.niches.length)h+='<div class="sizehint">لا توجد نيتشات بهذه الفلاتر. خفّف الفلاتر (مثلًا قلّل أقل مبيعات شهرية أو ارفع أقصى عدد تقييمات) ثم اضغط تحليل.</div>';
+ R.niches.forEach((n,i)=>{const [lb,cl]=oppLabel(n.sc);
+  h+=`<div class="extraBox oppCard"><div class="oppHead"><div><b>${i+1}. ${esc(n.name)}</b><div class="sizelegend">${esc(n.cat)}</div></div><span class="oppScore ${cl}">${n.sc}/100 · ${lb}</span></div><div class="chips"><span class="chip g">مبيعات ${fmt(n.sales)}/شهر</span><span class="chip">${n.items.length} منتج</span><span class="chip">${n.brands} علامة</span><span class="chip">سعر ~${fmt(Math.round(n.pr))} ${esc(CUR.c)}</span><span class="chip">تقييمات ~${isNaN(n.ar)?'—':fmt(Math.round(n.ar))}</span><span class="chip">★ ${isNaN(n.rt)?'—':n.rt.toFixed(1)}</span></div><ul class="oppNotes">${n.good.map(x=>`<li class="g">✓ ${esc(x)}</li>`).join('')}${n.warn.map(x=>`<li class="w">⚠ ${esc(x)}</li>`).join('')}</ul><button class="btn ghost" type="button" data-opp="${i}">عرض المنتجات (${n.items.length})</button><div id="oppL${i}" style="display:none"></div></div>`});
+ const ak=Object.keys(R.av);
+ if(ak.length)h+='<div class="extraBox"><h3 style="margin:0 0 6px;font-size:16px">🚫 تجنّب</h3>'+ak.map(k=>`<div class="oppAvoid"><b>${esc(k)}</b> — ${R.av[k].length} منتج<br><span class="sizelegend">${R.av[k].slice(0,4).map(r=>esc(String(r.Title||'').slice(0,60))).join(' · ')}</span></div>`).join('')+'</div>';
+ h+='<div class="sizehint"><b>الخطوة التالية:</b> شغّل Xray على نتائج بحث أفضل نيتشين، اقرأ التقييمات السلبية للمنافسين، اطلب عينات من 3 موردين، ثم احسب الربح في «حاسبة الأرباح». الدرجة تقديرية من بيانات الملف فقط، وليست ضمانًا للمبيعات.</div>';
+ out.innerHTML=h}
+function oppReport(){const R=OPP.res;if(!R)return '';let s='تقرير تحليل الفرص\n'+R.pass+' منتج اجتاز الفلاتر من '+R.total+'\n\n';R.niches.forEach((n,i)=>{s+=(i+1)+'. '+n.name+' — '+n.sc+'/100 ('+oppLabel(n.sc)[0]+')\n   مبيعات '+fmt(n.sales)+'/شهر، '+n.items.length+' منتج، سعر ~'+fmt(Math.round(n.pr))+' '+CUR.c+'\n';n.good.forEach(x=>s+='   + '+x+'\n');n.warn.forEach(x=>s+='   ! '+x+'\n')});const ak=Object.keys(R.av);if(ak.length){s+='\nتجنّب:\n';ak.forEach(k=>s+='- '+k+': '+R.av[k].length+' منتج\n')}return s}
+
+/* ---- ربط الأحداث ---- */
+$('#nO').onclick=()=>showTab('O');
+$('#oRun').onclick=renderOpp;
+$('#oReset').onclick=()=>{oppSetDefaults();renderOpp()};
+$('#oCopy').onclick=async()=>{if(!OPP.res){toast('لا يوجد تقرير بعد');return}const s=oppReport();try{await navigator.clipboard.writeText(s);toast('تم نسخ التقرير')}catch(e){toast('تعذّر النسخ')}};
+['#oSales','#oRev','#oPmin','#oPmax','#oW','#oTr','#oSel','#oVr'].forEach(id=>$(id).addEventListener('change',renderOpp));
+$('#oppPage').addEventListener('click',e=>{
+ if(e.target.closest('#oUp')){window._oppAfter=true;$('#file').click();return}
+ const b=e.target.closest('[data-opp]');
+ if(b){const i=+b.dataset.opp,box=$('#oppL'+i),n=OPP.res.niches[i];if(box.style.display==='none'){if(!box.innerHTML)box.innerHTML=n.items.map(oppItem).join('');box.style.display='block'}else box.style.display='none';return}
+ const m=e.target.closest('[data-oppm]');if(m){openM(rows[+m.dataset.oppm])}
+});
+$('#nK').onclick=()=>showTab('K');
+$('#cmpQ').addEventListener('input',renderCmpPicker);
+$('#cmpSrc').addEventListener('change',renderCmpPicker);
+$('#cmpPage').addEventListener('click',e=>{
+  const t=e.target.closest('[data-add],[data-rm],[data-act],[data-calc]');if(!t)return;
+  if(t.dataset.add){cmpToggle(t.dataset.add,rows.find(x=>String(x.ASIN)===t.dataset.add))}
+  else if(t.dataset.rm){cmpToggle(t.dataset.rm)}
+  else if(t.dataset.calc){cmpToCalc(t.dataset.calc)}
+  else if(t.dataset.act==='clear'){cmp.sel=[];cmp.snaps={};cmpSave();syncCmp();renderCmp()}
+  else if(t.dataset.act==='sim'){cmpSimilar()}
+});
+$('#cmpPage').addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='cmpProf'){cmp.profile=t.value;cmpSave();renderCmpResult()}
+  else if(t.id==='cmpDiff'){cmp.diff=t.checked;cmpSave();renderCmpResult()}
+  else if(t.dataset&&t.dataset.cost!==undefined){cmp.cost[t.dataset.cost]=t.value;cmpSave();renderCmpResult()}
+});
+syncCmp();
+</script>
+
+<style>
+/* Floating page navigation for long product lists */
+#quickScrollControls{position:fixed;z-index:99999;left:14px;bottom:22px;display:flex;flex-direction:column;gap:10px;align-items:center;direction:rtl}
+#quickScrollControls button{border:1px solid rgba(255,255,255,.35);border-radius:999px;background:linear-gradient(135deg,#e9b52e,#ffd967);color:#291b05;box-shadow:0 5px 18px rgba(46,31,5,.28);min-width:52px;height:52px;padding:0 13px;font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;touch-action:manipulation}
+#quickScrollControls button span{font-size:12px;white-space:nowrap}
+#quickScrollControls button:active{transform:scale(.96)}
+@media(max-width:480px){#quickScrollControls{left:10px;bottom:16px;gap:8px}#quickScrollControls button{min-width:48px;height:48px;padding:0 11px}#quickScrollControls button span{font-size:11px}}
+@media print{#quickScrollControls{display:none!important}}
+
+.inventoryCard{align-items:flex-start}.inventoryDetails{flex:1;min-width:0}.inventoryDetails select{width:100%;padding:12px;border:1px solid var(--line,#ddd);border-radius:12px;background:#fff;font:inherit}.inventoryDetails .extraActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.btn.danger{background:#b42318;color:#fff;border-color:#b42318}
+</style>
+<style>
+.walletBox{margin-bottom:14px}
+.wTopGrid{display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:14px;align-items:stretch}
+@media(max-width:760px){.wTopGrid{grid-template-columns:1fr}}
+.wCard{position:relative;direction:ltr;text-align:left;aspect-ratio:1.586/1;max-width:420px;width:100%;border-radius:22px;padding:22px 24px;color:#fff;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;background:radial-gradient(circle at 85% 8%,rgba(247,207,98,.55),transparent 42%),radial-gradient(circle at 0% 100%,rgba(217,162,27,.45),transparent 50%),linear-gradient(135deg,#1b1206,#3b290a 55%,#6b4a10);box-shadow:0 22px 40px -18px rgba(60,40,5,.75),inset 0 0 0 1px rgba(247,207,98,.25)}
+.wCard:before{content:"";position:absolute;inset:-40% -20% auto auto;width:260px;height:260px;border-radius:50%;border:1px solid rgba(247,207,98,.18);box-shadow:0 0 0 38px rgba(247,207,98,.04),0 0 0 80px rgba(247,207,98,.03)}
+.wRow{display:flex;justify-content:space-between;align-items:center;position:relative}
+.wBrand{font-weight:700;letter-spacing:3px;font-size:14px;color:#F7CF62}
+.wChip{width:44px;height:33px;border-radius:7px;background:linear-gradient(135deg,#f7e3a0,#c99a2e 50%,#f1d37b);position:relative;box-shadow:inset 0 0 0 1px rgba(90,60,5,.45)}
+.wChip:after{content:"";position:absolute;inset:6px 10px;border:1px solid rgba(90,60,5,.45);border-radius:3px}
+.wLbl{font-size:10px;letter-spacing:1.6px;color:rgba(255,255,255,.65);text-transform:uppercase;position:relative}
+.wBal{font-size:clamp(28px,6vw,38px);font-weight:700;letter-spacing:.5px;line-height:1.1;position:relative;font-variant-numeric:tabular-nums}
+.wBal.neg{color:#ff9a9a}
+.wNum{font-size:13px;letter-spacing:2.5px;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums}
+.wPanel{background:#fff;border-radius:18px;padding:16px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:12px}
+.wPanel h3{margin:0;font-size:16px}
+.wEdit{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.wEdit label{flex:1;min-width:160px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.wEdit input{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:16px;direction:ltr;text-align:left;font-variant-numeric:tabular-nums}
+.wKpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wKpi{border-radius:14px;padding:10px 12px;background:#F6F3EC}
+.wKpi span{display:block;font-size:11px;color:var(--muted)}
+.wKpi b{font-size:15px;font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}
+.wKpi.g b{color:var(--up)}.wKpi.r b{color:var(--down)}
+.wLedger{background:#fff;border-radius:18px;padding:16px;margin-top:14px;box-shadow:var(--sh)}
+.wLedger h3{margin:0 0 10px;font-size:16px;display:flex;justify-content:space-between;align-items:center}
+.wTx{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;margin-bottom:8px;border-inline-start:5px solid var(--up);background:#F3FBF7}
+.wTx.out{border-inline-start-color:var(--down);background:#FEF4F4}
+.wIco{width:38px;height:38px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff;background:var(--up)}
+.wTx.out .wIco{background:var(--down)}
+.wInfo{flex:1;min-width:0}
+.wInfo b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wInfo small{display:block;color:var(--muted);font-size:12px;line-height:1.5}
+.wAmt{text-align:end;direction:ltr;font-weight:700;font-variant-numeric:tabular-nums;color:var(--up);white-space:nowrap}
+.wTx.out .wAmt{color:var(--down)}
+.wAmt small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.wDel{border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px}
+.wDel:hover{background:rgba(0,0,0,.06);color:var(--down)}
+.wSup{margin:0 0 9px;display:block}
+.wSup input{width:100%;padding:12px;border:1px solid var(--line,#ddd);border-radius:12px;background:#fff;font:inherit}
+</style>
+
+<div id="sfOverlay" style="display:none;position:fixed;inset:0;background:rgba(14,26,46,.6);z-index:100000;align-items:flex-end;justify-content:center"><div style="background:var(--surface,#fff);color:var(--ink,#0E1A2E);width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:18px">📁 الملفات المحفوظة</b><button class="btn ghost" id="sfClose" type="button">إغلاق</button></div><div id="sfList"></div></div></div>
+<div id="quickScrollControls" aria-label="أزرار التنقل السريع في الصفحة">
+  <button id="quickScrollTop" type="button" aria-label="الصعود إلى أعلى الصفحة" title="الصعود إلى أعلى الصفحة">↑ <span>أعلى الصفحة</span></button>
+  <button id="quickScrollBottom" type="button" aria-label="النزول إلى أسفل الصفحة" title="النزول إلى أسفل الصفحة">↓ <span>أسفل الصفحة</span></button>
+</div>
+<script>
+(()=>{
+  const topBtn=document.getElementById('quickScrollTop');
+  const bottomBtn=document.getElementById('quickScrollBottom');
+  if(!topBtn||!bottomBtn)return;
+  topBtn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+  bottomBtn.addEventListener('click',()=>window.scrollTo({top:Math.max(document.documentElement.scrollHeight,document.body.scrollHeight),behavior:'smooth'}));
+})();
+</script>
+
+</body>
+</html>
